@@ -1,5 +1,5 @@
 services:
   ml_inference_services:
-#    image: ml_inference_services
+    image: ml_inference_services
     container_name: ml_inference_services
     build: "./project/ml_inference_services"

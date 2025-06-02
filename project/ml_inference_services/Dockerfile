@@ -1,6 +1,6 @@
-FROM python:3
+FROM ml_service
 WORKDIR /ml_inference_services
 COPY . .
-RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN $HOME/.local/bin/poetry install
 ENTRYPOINT ["tail", "-f", "/dev/null"]
+# $HOME/.local/bin/poetry env activate
+# $HOME/.local/bin/poetry run python main.py
