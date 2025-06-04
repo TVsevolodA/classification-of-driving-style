@@ -7,7 +7,7 @@ FROM python:3.12
 RUN curl -sSL https://install.python-poetry.org | python3 -
 # Задаем PATH переменную
 ENV PATH="/root/.local/bin:${PATH}"
-WORKDIR /ml_inference_services
+WORKDIR /gateway
 # Копируем файл со списком зависимостей. Для кэширования сборки.
 COPY pyproject.toml poetry.lock .
 # Выполняем установку без создания виртуального окружения,
@@ -18,5 +18,5 @@ RUN poetry config virtualenvs.create false \
  && poetry install --no-root --no-ansi
 # Копируем все оставшиеся файлы
 COPY . .
-EXPOSE 8000
-CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 6000
+ENTRYPOINT ["tail", "-f", "/dev/null"]

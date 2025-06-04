@@ -1,9 +1,37 @@
+from fastapi import FastAPI, WebSocket
 import requests
 
-url = "http://localhost:8000/predict"
-data = {"veincle length": 450, "veincle weight": 2500, "axles number": 2, "perceding veincle time-gap": 0.5, "Lane of the road": 2, "veincle speed": 200, "perceding veincle speed": 150, "perceding veincle weight": 1400, "perceding veincle length": 440, "road condition": 2, "Air temprture": -5, "perciption type": 2, "perciption intensity": 2, "relatve humadity": 40, "wind direction": 90, "wind speed": 25, "Lighting condition": 2}
-response = requests.post(url, json=data)
-# url = "http://localhost:8000/"
-# response = requests.get(url)
-print("Status Code", response.status_code)
-print("JSON Response ", response.json())
+app = FastAPI()
+
+# Подключенные клиенты к серверу
+connected_clients = set()
+
+async def predict(input_parameters: dict) -> dict:
+    """
+    :param input_parameters: JSON-объект телеметрии с транстпортного средства
+    :return: JSON-объект, с распознанным стилем вождения
+    """
+    url: str = "http://ml_inference_services:8000/predict"
+    response = requests.post(url, json=input_parameters)
+    return response.json()
+
+@app.websocket("/tracking")
+async def tracking(websocket: WebSocket):
+    """
+    Принимает данные
+    Отправляет в ml_inference_services
+    Делает запись в БД
+    Отправляет данные в UI
+    :param websocket:
+    :return:
+    """
+    await websocket.accept()
+    connected_clients.add(websocket)
+    try:
+        while True:
+            input_data = await websocket.receive_json()
+            prediction_result = await predict(input_parameters=input_data)
+            await websocket.send_text(f"Ответ нейросети: {prediction_result}")
+    except Exception as e:
+        print(f"Произошла ошибка связи с клиентом.\nСоединение разорвано.\n{e}")
+        connected_clients.remove(websocket)

@@ -3,7 +3,7 @@ from fastai.tabular.all import *
 from fastapi import Request, FastAPI
 
 MODEL = load_learner('model.pkl')
-DICT_RESULT = {1: 'Агрессивный', 2: 'Нормальный', 3: 'Неопределенный'}
+DICT_RESULT = {1: 'Agressive', 2: 'Normal', 3: 'Indefinite'}
 
 app = FastAPI()
 
