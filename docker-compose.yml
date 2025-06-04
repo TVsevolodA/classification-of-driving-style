@@ -1,7 +1,32 @@
 services:
+  device_emulator:
+    image: device_emulator
+    container_name: device_emulator
+    build: "./project/device_emulator"
+    ports:
+      - 6000:6000
+
+  gateway:
+    image: gateway
+    container_name: gateway
+    build: "./project/gateway"
+    ports:
+      - 7000:7000
+    depends_on:
+      ml_inference_services:
+        # Запустить gateway, только после старта сервера в ml_inference_services
+        # Подробнее: https://docs.docker.com/reference/compose-file/services/#depends_on
+        condition: service_healthy
+
   ml_inference_services:
     image: ml_inference_services
     container_name: ml_inference_services
     build: "./project/ml_inference_services"
     ports:
       - 8000:8000
+    # Проверка запуска сервера
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
