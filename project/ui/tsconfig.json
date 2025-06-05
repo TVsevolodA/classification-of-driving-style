@@ -28,7 +28,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "components/AnimatedRouteMap.jsx"  ],
+, "components/RouteMap.tsx"  ],
   "exclude": [
     "node_modules"
   ]
