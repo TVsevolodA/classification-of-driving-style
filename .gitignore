@@ -3,6 +3,6 @@
 *.env
 __pycache__/
 
-*/node_modules
-*/.next/
-*/next-env.d.ts
+node_modules
+.next/
+next-env.d.ts
