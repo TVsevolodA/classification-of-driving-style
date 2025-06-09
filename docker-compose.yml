@@ -4,7 +4,7 @@ services:
     container_name: device_emulator
     build: "./project/device_emulator"
     ports:
-      - 6000:6000
+      - 5010:5010
 
   gateway:
     image: gateway
