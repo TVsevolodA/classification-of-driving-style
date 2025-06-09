@@ -4,10 +4,12 @@ FROM python:3.12
 # https://stackoverflow.com/questions/53835198/integrating-python-poetry-with-docker
 
 # Устанавливаем системные зависимости
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN apt-get update && \
+apt-get install nginx libnginx-mod-rtmp ffmpeg libsm6 libxext6  -y && \
+curl -sSL https://install.python-poetry.org | python3 -
 # Задаем PATH переменную
 ENV PATH="/root/.local/bin:${PATH}"
-WORKDIR /gateway
+WORKDIR /device_emulator
 # Копируем файл со списком зависимостей. Для кэширования сборки.
 COPY pyproject.toml poetry.lock .
 # Выполняем установку без создания виртуального окружения,
@@ -18,5 +20,6 @@ RUN poetry config virtualenvs.create false \
  && poetry install --no-root --no-ansi
 # Копируем все оставшиеся файлы
 COPY . .
-EXPOSE 6000
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 5010
 ENTRYPOINT ["tail", "-f", "/dev/null"]
