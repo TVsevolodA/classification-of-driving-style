@@ -22,4 +22,5 @@ RUN poetry config virtualenvs.create false \
 COPY . .
 COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 5010
-ENTRYPOINT ["tail", "-f", "/dev/null"]
+EXPOSE 5000
+CMD sh -c "nginx && ffmpeg -re -stream_loop -1 -i test_drive.mp4 -c:v libx264 -c:a aac -s 1280x720 -f flv rtmp://device_emulator:5000/hls/xxx"
