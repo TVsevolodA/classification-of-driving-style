@@ -1,6 +1,7 @@
 .idea/
 .venv/
 *.env
+*.MP4
 __pycache__/
 
 node_modules
