@@ -31,7 +31,8 @@ async def tracking(websocket: WebSocket):
         while True:
             input_data = await websocket.receive_json()
             prediction_result = await predict(input_parameters=input_data)
-            await websocket.send_text(f"Ответ нейросети: {prediction_result}")
+            for client in connected_clients:
+                await client.send_text(f"Ответ нейросети: {prediction_result}")
     except Exception as e:
         print(f"Произошла ошибка связи с клиентом.\nСоединение разорвано.\n{e}")
         connected_clients.remove(websocket)

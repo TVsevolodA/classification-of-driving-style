@@ -1,30 +1,31 @@
 import json
 import pickle
-
-import pandas as pd
-# from fastai.tabular.all import load_learner
 from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 
-# MODEL = load_learner('model1.pickle')
 MODEL = pickle.load(open('model1.pickle', 'rb'))
 DICT_RESULT = {1: 'Agressive', 2: 'Normal', 3: 'Vague'}
-
 app = FastAPI()
 
 @app.post("/predict")
 async def predict(request: Request):
-    data = await request.json()
-    if len(data) == 0:
+    try:
+        data = await request.json()
+        result = MODEL.predict([list(data.values())])
+        prediction_result = DICT_RESULT.get(result[0])
+        return JSONResponse(content={"prediction_result": prediction_result}, status_code=200)
+    except Exception:
         return JSONResponse(content={}, status_code=400)
-    result = MODEL.predict([list(data.values())])
-    prediction_result = DICT_RESULT.get(result[0])
-    return JSONResponse(content={"prediction_result": prediction_result}, status_code=200)
 
 @app.get("/")
-async def predict():
-    return json.dumps({"response": "все работает!"})
+def home():
+    return JSONResponse(
+        content={"response": "Welcome to the Driving Style Classification API."},
+        status_code=200
+    )
 
+# import pandas as pd
+# from fastai.tabular.all import load_learner
 # learn = pickle.load(open('model1.pickle', 'rb'))
 # # learn = load_learner('model.pkl')
 #
