@@ -1,11 +1,11 @@
 import datetime as dt
 import re
 import time
-from websocket import create_connection, WebSocket, WebSocketAddressException
+from websocket import WebSocketApp
 import subprocess
 
 
-def _get_speed(timecode: int) -> int:
+def get_speed(timecode: int) -> int:
     """
     Получение скорости транспортного средства в конкретный момент времени
     :param timecode: Время за записи
@@ -20,8 +20,7 @@ def _get_speed(timecode: int) -> int:
                 return speed_km_h
         return 0
 
-
-def _get_timecode_with_stream() -> int:
+def get_timecode_with_stream() -> int:
     """
     Получение текущего времени воспроизведения видеопотока. Является основным способом получения времени.
     :return: past_time прошедшие секунды с начала видео
@@ -41,48 +40,30 @@ def _get_timecode_with_stream() -> int:
         return int(past_time % 60)
     return -1
 
-# 1. Запустить трансляцию
-cmd = [
-    'ffmpeg', '-re', '-stream_loop', '-1',
-    '-i', 'normal_test_drive.MP4',
-    '-c:v', 'libx264', '-tune', 'zerolatency',
-    '-preset', 'ultrafast', '-x264-params',
-    'bframes=0', '-g', '30', '-keyint_min', '30',
-    '-sc_threshold', '0', '-c:a', 'aac',
-    '-s', '1280x720',
-    '-f', 'flv', 'rtmp://device_emulator:5000/hls/xxx'
-]
-process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-TIMECODE_PATTERN = re.compile(r'time=(\d+:\d+:\d+)')
+def on_message(wsapp, message):
+    pass
+    # print(message)
 
-# 2. Установить соединение с gateway
-NUMBER_CONNECTION_ATTEMPTS = 10
-successful_connection = False
-for _ in range(NUMBER_CONNECTION_ATTEMPTS):
-    try:
-        # TODO: Желательно предусмотреть момент разрыва соединения с последующим переподключением!
-        ws: WebSocket = create_connection(url="ws://gateway:7000/tracking")
-        successful_connection = True
-    except (WebSocketAddressException, ConnectionRefusedError):
-        time.sleep(3)
+def on_error(wsapp, error):
+    print(f"Возникла ошибка в работе веб-сокета:\n{error}")
 
-if successful_connection:
-    # 3. Засечь время запуска
+def on_close(wsapp, close_status_code, close_msg):
+    print("Соединение закрыто.")
+
+def on_open(wsapp):
+    print("Соединение открыто.")
     start_time = dt.datetime.now()
 
-    with open('normal_test_drive.txt', 'r') as data_file:
-        MIN_TIME = int(data_file.readline().split(',')[0])
-
     while True:
-        time_stream = _get_timecode_with_stream()
+        time_stream = get_timecode_with_stream()
         if time_stream == -1:
             current_time = dt.datetime.now()
             diff_time = (current_time - start_time).total_seconds()
             if diff_time >= 60:
                 start_time = current_time
-            current_speed = _get_speed( timecode=int(diff_time % 60) )
+            current_speed = get_speed( timecode=int(diff_time % 60) )
         else:
-            current_speed = _get_speed(timecode=time_stream)
+            current_speed = get_speed(timecode=time_stream)
 
         messege = [
             '{"veincle length": 441,',
@@ -103,6 +84,27 @@ if successful_connection:
             ' "wind speed": 8,',
             ' "Lighting condition": 0}',
         ]
-        ws.send(''.join(messege))
-        result = ws.recv()
-        print(f"Сервер вернул, что на скорости {current_speed} \n{result}")
+        wsapp.send(''.join(messege))
+
+cmd = [
+    'ffmpeg', '-re', '-stream_loop', '-1',
+    '-i', 'normal_test_drive.MP4',
+    '-c:v', 'libx264', '-tune', 'zerolatency',
+    '-preset', 'ultrafast', '-x264-params',
+    'bframes=0', '-g', '30', '-keyint_min', '30',
+    '-sc_threshold', '0', '-c:a', 'aac',
+    '-s', '1280x720',
+    '-f', 'flv', 'rtmp://device_emulator:5000/hls/xxx'
+]
+process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+TIMECODE_PATTERN = re.compile(r'time=(\d+:\d+:\d+)')
+
+with open('normal_test_drive.txt', 'r') as data_file:
+    MIN_TIME = int(data_file.readline().split(',')[0])
+
+ws = WebSocketApp(url="ws://gateway:7000/tracking",
+                            on_open=on_open,
+                            on_message=on_message,
+                            on_error=on_error,
+                            on_close=on_close)
+ws.run_forever(reconnect=1)
