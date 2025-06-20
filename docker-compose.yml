@@ -22,8 +22,6 @@ services:
     image: ml_inference_services
     container_name: ml_inference_services
     build: "./project/ml_inference_services"
-    ports:
-      - 8000:8000
     # Проверка запуска сервера
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
