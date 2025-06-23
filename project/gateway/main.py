@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 import requests
 
 app = FastAPI()
-
+# poetry export --output requirements.txt
 # TODO: Удалить или перенастроить после переноса UI в docker контейнер!
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
@@ -38,11 +38,9 @@ async def inference_instance(request: Request):
     """
     try:
         input_parameters = await request.json()
-        print(input_parameters)
-        # prediction = await predict(input_parameters=input_parameters)
-        return JSONResponse(content={"prediction_result": "good"}, status_code=200)
-    except Exception as e:
-        print(f'Произошла ошибка\n{e}')
+        prediction = await predict(input_parameters=input_parameters)
+        return JSONResponse(content=prediction, status_code=200)
+    except Exception:
         return JSONResponse(content={}, status_code=400)
 
 @app.websocket("/tracking")

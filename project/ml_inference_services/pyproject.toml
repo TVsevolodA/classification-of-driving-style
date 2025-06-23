@@ -7,9 +7,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-fastai = "^2.7.19"
 fastapi = "^0.115.12"
 uvicorn = {extras = ["standard"], version = "^0.34.3"}
+scikit-learn = "^1.7.0"
 
 
 [build-system]
