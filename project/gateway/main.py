@@ -40,7 +40,8 @@ async def inference_instance(request: Request):
         input_parameters = await request.json()
         prediction = await predict(input_parameters=input_parameters)
         return JSONResponse(content=prediction, status_code=200)
-    except Exception:
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={}, status_code=400)
 
 @app.websocket("/tracking")

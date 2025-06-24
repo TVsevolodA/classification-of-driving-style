@@ -13,7 +13,8 @@ async def predict(request: Request):
         result = MODEL.predict([list(data.values())])
         prediction_result = DICT_RESULT.get(result[0])
         return JSONResponse(content={"prediction_result": prediction_result}, status_code=200)
-    except Exception:
+    except Exception as e:
+        print(f'Ошибка в ml:\n{e}')
         return JSONResponse(content={}, status_code=400)
 
 @app.get("/")

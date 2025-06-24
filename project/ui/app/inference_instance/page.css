@@ -1,3 +1,53 @@
-.form-range::-ms-track {
-    background-color: orange;
+.image_input_radio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 1;
+    border: 1px solid gray;
+}
+
+.form-check {
+    display: flex;
+    justify-content: space-between;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #dee2e6;
+    outline: none;
+    transition: background 450ms ease-in;
+}
+
+.slider::-webkit-slider-thumb {
+    appearance: none;
+    height: 20px;
+    background: #0d6efd;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    margin-top: -6px;
+    box-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+.slider::-moz-range-thumb {
+    height: 20px;
+    background: #0d6efd;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
 }
