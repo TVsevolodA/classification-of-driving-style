@@ -1,4 +1,11 @@
 services:
+#  ui:
+#    image: ui
+#    container_name: ui
+#    build: "./project/ui"
+#    ports:
+#      - 3000:3000
+
   device_emulator:
     image: device_emulator
     container_name: device_emulator

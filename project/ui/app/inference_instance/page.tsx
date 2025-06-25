@@ -5,9 +5,11 @@ import { FormEvent, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 import "./page.css";
+import Modal from "./modal_result_window"
 import { VeincleLength } from "./Models/VeincleLength";
 import { AxlesNumber } from "./Models/AxlesNumber";
 import { VeincleSpeed } from "./Models/VeincleSpeed";
+import { PercedingVeincleSpeed } from "./Models/PercedingVeincleSpeed";
 
 export default function Page() {
     function formDataToMap(formData) {
@@ -30,7 +32,9 @@ export default function Page() {
             headers: {'Content-type': 'application/json'}
         });
         const res = await response.json();
-        console.log(res);
+        setPredict(res);
+        setIsOpen(true);
+        // console.log(res);
     }
 
     function getColor(percentage: number): string {
@@ -47,8 +51,14 @@ export default function Page() {
 
     const veincleLength = new VeincleLength(155, 2330, 15, 450);
     const axlesNumber = new AxlesNumber(2, 9, 1, 2);
-    const veincleSpeed = new VeincleSpeed(45, 130, 5, 50);
+    const veincleSpeed = new VeincleSpeed(45, 130, 1, 50);
     const vehicleSpeedPercentage = veincleSpeed.calculatePercentage();
+
+    const percedingVeincleSpeed = new PercedingVeincleSpeed(42, 119, 1, 50);
+    const percedingVeincleSpeedPercentage = percedingVeincleSpeed.calculatePercentage();
+
+    const [isOpen, setIsOpen] = useState(false);
+    const [predict, setPredict] = useState({});
 
     return (
     <form onSubmit={onSubmit} autoComplete="on">
@@ -158,7 +168,27 @@ export default function Page() {
         </div>
 
         <div className="mb-5">
-            <label htmlFor="perceding_veincle_speed" className="form-label">
+                        <div>
+                <label htmlFor="perceding_veincle_speed" className="form-label">
+                    <p>Скорость предыдущего транспортного средства (от 42 до 119,5 км/ч):&nbsp;
+                        <span className="text-primary fw-bold">{percedingVeincleSpeed.currentValue}</span>
+                    </p>
+                </label>
+            </div>
+            <div>
+                <input id="perceding_veincle_speed" type="range"
+                        name="perceding veincle speed"
+                        className="slider"
+                        min={percedingVeincleSpeed.minValue}
+                        max={percedingVeincleSpeed.maxValue}
+                        step={percedingVeincleSpeed.step}
+                        value={percedingVeincleSpeed.currentValue}
+                        style={{background: `linear-gradient(to right, ${getColor(percedingVeincleSpeedPercentage)} 0%, ${getColor(percedingVeincleSpeedPercentage)} ${percedingVeincleSpeedPercentage}%, #dee2e6 ${percedingVeincleSpeedPercentage}%, #dee2e6 100%)`}}
+                        onChange={(e) => percedingVeincleSpeed.setter(Number(e.target.value))}
+                        required={true}
+                />
+            </div>
+            {/* <label htmlFor="perceding_veincle_speed" className="form-label">
                 Скорость предыдущего транспортного средства (от 42 до 119,5 км/ч):
             </label>
             <input id="perceding_veincle_speed" type="number"
@@ -166,7 +196,7 @@ export default function Page() {
                     min={42} max={119}
                     className="form-control input_field"
                     required={true}
-            />
+            /> */}
         </div>
 
         <div className="mb-5">
@@ -428,8 +458,18 @@ export default function Page() {
         </fieldset>
         
         <div className="mb-5 d-flex justify-content-center">
-            <button className="btn btn-primary btn-lg" type="submit">Отправить</button>
+            <input type="submit"
+                    className="btn btn-primary btn-lg"
+                    data-bs-toggle="modal"
+                    data-bs-target="#staticBackdrop"
+                    value="Отправить"
+                    // onClick={() => onSubmit()}
+            />
+                {/* Отправить
+            </button> */}
         </div>
+
+        <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} resultPredict={JSON.stringify(predict)} />
     </form>
     );
 }
