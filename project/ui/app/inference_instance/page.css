@@ -1,3 +1,4 @@
+/* Оформление для кнопок выбора параметра с изображениями */
 .image_input_radio {
     display: flex;
     flex-direction: column;
@@ -8,11 +9,7 @@
     border: 1px solid gray;
 }
 
-.form-check {
-    display: flex;
-    justify-content: space-between;
-}
-
+/* Удаление стрелок у input полей */
 input[type='number']::-webkit-outer-spin-button,
 input[type='number']::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -22,6 +19,7 @@ input[type='number'] {
     appearance: textfield;
 }
 
+/* Оформление слайдера для выбора скорости */
 .slider {
     width: 100%;
     height: 8px;
