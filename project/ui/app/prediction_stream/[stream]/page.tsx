@@ -13,7 +13,7 @@ export default function Page() {
         if (videoRef.current) {
             if (Hls.isSupported()) {
             const hls = new Hls();
-            hls.loadSource("http://localhost:5010/hls/xxx.m3u8");
+            hls.loadSource(`http://localhost:5010/hls/stream${stream}/live.m3u8`);
             hls.attachMedia(videoRef.current);
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 videoRef.current.play();

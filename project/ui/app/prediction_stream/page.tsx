@@ -126,16 +126,16 @@ export default function Page() {
         <div className="container-fluid">
             {/* Заголовок */}
             <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 className="display-5 fw-bold text-dark mb-1">Мониторинг стиля вождения</h1>
-                <p className="text-muted">Трансляции в режиме реального времени</p>
-            </div>
-            <div className="d-flex align-items-center">
-                <div className="d-flex align-items-center text-success">
-                <div className="bg-success rounded-circle me-2" style={{ width: "8px", height: "8px" }}></div>
-                <small className="fw-medium">В сети</small>
+                <div>
+                    <h1 className="display-5 fw-bold text-dark mb-1">Мониторинг стиля вождения</h1>
+                    <p className="text-muted">Трансляции в режиме реального времени</p>
                 </div>
-            </div>
+                <div className="d-flex align-items-center">
+                    <div className="d-flex align-items-center text-success">
+                        <div className="bg-success rounded-circle me-2" style={{ width: "8px", height: "8px" }}></div>
+                        <small className="fw-medium">В сети</small>
+                    </div>
+                </div>
             </div>
 
             {/* Статистика */}
