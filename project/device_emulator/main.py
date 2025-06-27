@@ -158,7 +158,7 @@ stream_parameters = [
             "Lane of the road":1,
             "preceding vehicle time-gap":5,
             "road_condition":2,
-            "Lighting condition":0
+            "Lighting condition":2
         }
     }
 ]
