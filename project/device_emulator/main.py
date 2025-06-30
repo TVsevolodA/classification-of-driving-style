@@ -7,20 +7,21 @@ import subprocess
 import json
 
 def run_client(data: dict, stream_index: int):
-    def get_speed(timecode: int) -> int:
+    def get_speed(filename: str, timecode: int) -> int:
         """
         Получение скорости транспортного средства в конкретный момент времени
+        :param filename:
         :param timecode: Время за записи
         :return: current_speed: Скорость в данный момент времени
         """
-        with open('normal_test_drive.txt', 'r') as gps_data:
+        with open(filename, 'r') as gps_data:
             time_since_start_stream = MIN_TIME + timecode
             for data in gps_data:
                 if int(data.split(',')[0]) >= time_since_start_stream:
                     speed_cm_s = int(data.split(',')[5])
                     speed_km_h = round(speed_cm_s * 3600 / 1e5)  # 1e5 == 100_000
                     return speed_km_h
-            return 0
+        return 0
 
     def get_timecode_with_stream() -> int:
         """
@@ -63,9 +64,9 @@ def run_client(data: dict, stream_index: int):
                 diff_time = (current_time - start_time).total_seconds()
                 if diff_time >= 60:
                     start_time = current_time
-                current_speed = get_speed( timecode=int(diff_time % 60) )
+                current_speed = get_speed( filename=f"{data["name_data_file"]}.txt",  timecode=int(diff_time % 60) )
             else:
-                current_speed = get_speed(timecode=time_stream)
+                current_speed = get_speed( filename=f"{data["name_data_file"]}.txt",  timecode=time_stream )
 
             messege = data["input_parametrs"]
             messege["veincle speed"] = current_speed
@@ -98,7 +99,7 @@ def run_client(data: dict, stream_index: int):
         '-preset', 'ultrafast', '-x264-params',
         'bframes=0', '-g', '30', '-keyint_min', '30',
         '-sc_threshold', '0', '-c:a', 'aac',
-        '-s', '1280x720',
+        '-s', '640x480',
         '-f', 'flv', data["url"] # 'rtmp://device_emulator:5000/hls/xxx'
     ]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

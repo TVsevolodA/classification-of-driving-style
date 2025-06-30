@@ -1,9 +1,5 @@
 'use client';
-
 import { FormEvent, useState } from "react";
-
-import "bootstrap-icons/font/bootstrap-icons.css";
-
 import "./page.css";
 import Modal from "./modal_result_window"
 import { VeincleLength } from "./Models/VeincleLength";
