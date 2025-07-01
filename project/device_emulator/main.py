@@ -70,27 +70,14 @@ def run_client(data: dict, stream_index: int):
 
             messege = data["input_parametrs"]
             messege["veincle speed"] = current_speed
-            # messege = [
-            #     '{"veincle length": 441,',
-            #     ' "veincle weight": 1380,',
-            #     ' "axles number": 2,',
-            #     ' "perceding veincle time-gap": 60,',
-            #     ' "Lane of the road": 1,',
-            #     f' "veincle speed": {current_speed},',
-            #     ' "perceding veincle speed": 30,',
-            #     ' "perceding veincle weight": 2021,',
-            #     ' "perceding veincle length": 500,',
-            #     ' "road condition": 0,',
-            #     ' "Air temprture": 25,',
-            #     ' "perciption type": 0,',
-            #     ' "perciption intensity": -1,',
-            #     ' "relatve humadity": 60,',
-            #     ' "wind direction": 50,',
-            #     ' "wind speed": 8,',
-            #     ' "Lighting condition": 0}',
-            # ]
-            # wsapp.send(''.join(messege))
-            wsapp.send(json.dumps(messege))
+            data_send = {
+                "input_parametrs": messege,
+                "metadata": {
+                    "speed": current_speed,
+                    "stream": stream_index+1,
+                }
+            }
+            wsapp.send(json.dumps(data_send))
 
     cmd = [
         'ffmpeg', '-re', '-stream_loop', '-1',

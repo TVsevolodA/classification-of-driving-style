@@ -154,6 +154,10 @@ export default function Page() {
     const [messages, setMessages] = useState([]);
     const [drivingStyle, setDrivingStyle] = useState("Идет анализ стиля...");
 
+    useEffect(() => {
+        setDrivingStyle( estimationAverageIndicator() );
+    }, [messages]);
+
     // Функция для оценивания усредненного показателя вождени
     function estimationAverageIndicator(): string {
         if (messages.length === 0) return "Идет анализ стиля...";
@@ -192,13 +196,16 @@ export default function Page() {
         };
 
         socket.onmessage = (event) => {
-            console.log('Сообщение от сервера: ', event.data);
-            setMessages(prev => {
-                let queue = [Number(event.data), ...prev];
-                if (queue.length > 50) queue = queue.slice(queue.length - 50);
-                return queue;
-            });
-            setDrivingStyle( estimationAverageIndicator() );
+            const newDataObject = JSON.parse(event.data);
+            if (Number(newDataObject["metadata"]["stream"]) === Number(stream)) {
+                // console.log(event.data);
+                const predictionResult = Number(newDataObject["result"]);
+                setMessages(prev => {
+                    let queue = [predictionResult, ...prev];
+                    if (queue.length > 50) queue = queue.slice(queue.length - 50);
+                    return queue;
+                });
+            }
         };
 
         socket.onerror = (error) => {

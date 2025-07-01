@@ -1,6 +1,7 @@
 from fastapi import Request, FastAPI, WebSocket
 from fastapi.responses import JSONResponse
 import requests
+import json
 
 app = FastAPI()
 # poetry export --output requirements.txt
@@ -59,9 +60,13 @@ async def tracking(websocket: WebSocket):
     try:
         while True:
             input_data = await websocket.receive_json()
-            prediction_result = await predict(input_parameters=input_data)
+            prediction_result = await predict(input_parameters=input_data["input_parametrs"])
+            data_send = {
+                "result": prediction_result["prediction_result"],
+                "metadata": input_data["metadata"],
+            }
             for client in connected_clients:
-                await client.send_text(prediction_result)
+                await client.send_text(json.dumps(data_send))
     except Exception as e:
         print(f"Произошла ошибка связи с клиентом.\nСоединение разорвано.\n{e}")
         connected_clients.remove(websocket)
