@@ -2,9 +2,8 @@
 import Hls from 'hls.js';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./page.css";
-import RouteMap from '../../../components/RouteMap';
+// import RouteMap from '../../../components/RouteMap';
 
 export default function Page() {
     // Моковые данные для детального просмотра водителя
@@ -106,7 +105,7 @@ export default function Page() {
     rpm: 2100,
     temperature: 89,
     coordinates: { lat: 55.7558, lng: 37.6176 },
-    lastUpdate: new Date().toLocaleTimeString(),
+    lastUpdate: '',
     });
 
     // Симуляция обновления данных в реальном времени
@@ -143,39 +142,35 @@ export default function Page() {
         }
     }
 
-    //     switch (status) {
-    //         case "normal":
-    //         return "success"
-    //         case "warning":
-    //         return "warning"
-    //         case "critical":
-    //         return "danger"
-    //         default:
-    //         return "secondary"
-    //     }
+    // Показать местоположение авто на карте
+    // function showMap() {
+    //     setActiveTab("live");
+    //     window.scrollTo(0, document.body.scrollHeight);
     // }
 
-    // Функция для оценивания усредненного показателя вождения
-    function estimationAverageIndicator(): string {
-        // TODO: реализовать!
-        return "Нормальный";
-    }
-
-    // Показать местоположение авто на карте
-    function showMap() {
-        setActiveTab("live");
-        window.scrollTo(0, document.body.scrollHeight);
-    }
-
-        const params = useParams();
+    const params = useParams();
     const { stream } = params;
     const videoRef = useRef(null);
     const [messages, setMessages] = useState([]);
+    const [drivingStyle, setDrivingStyle] = useState("Идет анализ стиля...");
+
+    // Функция для оценивания усредненного показателя вождени
+    function estimationAverageIndicator(): string {
+        if (messages.length === 0) return "Идет анализ стиля...";
+        const dictResult = new Map ([
+            [1,  'Агрессивный'],
+            [2,  'Нормальный'],
+            [3,  'Неопределенный'],
+        ]);
+        const sumElements = messages.reduce((partialSum, a) => partialSum + a, 0);
+        const countElements = messages.length;
+        const avgValue = Math.round(sumElements / countElements);
+        return dictResult.get(avgValue) + " стиль";
+    }
 
     // Подключеие видеотрансляции
     useEffect(() => {
-        if (videoRef.current) {
-            if (Hls.isSupported()) {
+        if (activeTab === "live" && videoRef.current && Hls.isSupported()) {
             const hls = new Hls();
             hls.loadSource(`http://localhost:5010/hls/stream${stream}/live.m3u8`);
             hls.attachMedia(videoRef.current);
@@ -185,31 +180,40 @@ export default function Page() {
             return () => {
                 hls.destroy();
             };
-            }
         }
-    }, []);
+    }, [activeTab]);
 
     // Работа с вебсокетом
     useEffect(() => {
         const socket = new WebSocket("ws://localhost:7000/tracking");
 
         socket.onopen = () => {
-            // console.log('Соединение установлено');
+            console.log('Соединение установлено');
         };
 
         socket.onmessage = (event) => {
-            setMessages(prev => [event.data, ...prev]);
+            console.log('Сообщение от сервера: ', event.data);
+            setMessages(prev => {
+                let queue = [Number(event.data), ...prev];
+                if (queue.length > 50) queue = queue.slice(queue.length - 50);
+                return queue;
+            });
+            setDrivingStyle( estimationAverageIndicator() );
         };
 
         socket.onerror = (error) => {
-            // console.log('Ошибка WebSocket', error);
+            console.log('Ошибка WebSocket', error);
         };
 
         socket.onclose = () => {
-            // console.log('Соединение закрыто');
+            console.log('Соединение закрыто');
         };
-    });
 
+        return () => {
+            // Закрываем соединение при размонтировании
+            socket.close();
+        };
+    }, []);
     return (
         <div className="min-vh-100 bg-light p-4">
             {/* Заголовок с основной информацией */}
@@ -249,15 +253,15 @@ export default function Page() {
                         <div className="col-md-4 text-md-end">
                             <div className="mb-3">
                                 <span className="badge bg-success fs-6 px-3 py-2">
-                                    {estimationAverageIndicator()} стиль
+                                    {drivingStyle}
                                 </span>
                             </div>
-                            <div className="d-flex justify-content-md-end gap-2">
+                            {/* <div className="d-flex justify-content-md-end gap-2">
                                 <button className="btn btn-outline-secondary" onClick={showMap}>
                                     <i className="bi bi-geo-alt me-2"></i>
                                     Показать на карте
                                 </button>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>
@@ -312,7 +316,7 @@ export default function Page() {
                         <li className="nav-item" role="presentation">
                         <button
                             className={`nav-link ${activeTab === "live" ? "active" : ""}`}
-                            onClick={() => setActiveTab("live")}
+                            onClick={() => setActiveTab("live") }
                             type="button"
                         >
                             <i className="bi bi-broadcast me-2"></i>
@@ -384,7 +388,7 @@ export default function Page() {
                                     </div>
                                     <div className="card-body p-0">
                                         <div className="position-relative bg-dark" style={{ height: "400px" }}>
-                                            <video ref={videoRef} id="video" className="w-100 h-100 object-fit-cover" controls={true} autoPlay={true}/>
+                                            <video ref={videoRef} id="video" className="w-100 h-100 object-fit-cover" controls={true} autoPlay={true} />
                                             <div className="position-absolute top-0 start-0 p-3">
                                                 <span className="badge bg-danger">
                                                     <i className="bi bi-broadcast me-1"></i>
@@ -396,7 +400,7 @@ export default function Page() {
                                 </div>
 
                                 {/* Карта в реальном времени */}
-                                <div className="card mt-4">
+                                {/* <div className="card mt-4">
                                     <div className="card-header">
                                         <h6 className="mb-0">
                                             <i className="bi bi-map me-2"></i>
@@ -405,10 +409,10 @@ export default function Page() {
                                     </div>
                                     <div className="card-body p-0">
                                         <div className="position-relative bg-light" style={{ height: "300px" }}>
-                                            <RouteMap /> {/* className="w-100 h-100 object-fit-cover"  */}
+                                            <RouteMap />
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
 
                             {/* Телематика в реальном времени */}

@@ -59,10 +59,18 @@ export default function RouteMap() {
 
     const map = new Map({
         container: mapContainer.current,
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-        // https://basemaps.cartocdn.com/gl/positron-gl-style/style.jsonhttps://raw.githubusercontent.com/teamapps-org/maplibre-gl-styles/refs/heads/main/example-tileserver-config.json
+        style: './style.json',
+        // https://raw.githubusercontent.com/teamapps-org/maplibre-gl-styles/refs/heads/main/example-tileserver-config.json
         // https://demotiles.maplibre.org/style.json
         // https://basemaps.cartocdn.com/gl/positron-gl-style/style.json
+        /*
+        
+    OSM Bright: https://openmaptiles.github.io/osm-bright-gl-style/style-cdn.json
+    Positron: https://openmaptiles.github.io/positron-gl-style/style-cdn.json
+    Dark Matter: https://openmaptiles.github.io/dark-matter-gl-style/style-cdn.json
+    MapTiler Basic: https://openmaptiles.github.io/maptiler-basic-gl-style/style-cdn.json
+
+        */
         center: route[0],
         zoom: 13
     });
