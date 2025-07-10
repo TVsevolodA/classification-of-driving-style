@@ -16,6 +16,11 @@ const Modal = ({ isOpen, onClose, resultPredict }) => {
 
     const result: string = JSON.parse(resultPredict)["prediction_result"];
     const imagePath: string = `/${result}.jpg`;
+    const dictResult = new Map ([
+        [1,  'Агрессивный'],
+        [2,  'Нормальный'],
+        [3,  'Неопределенный'],
+    ]);
     return (
         <div className="modal fade show"
                 style={{ display: 'block' }}
@@ -36,7 +41,7 @@ const Modal = ({ isOpen, onClose, resultPredict }) => {
                             style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }} >
                         <h4>Результат предсказания:&nbsp;
                             <span style={{ color: colorSelection(result) }}>
-                                {result}
+                                {dictResult.get(Number(result))}
                             </span>
                         </h4>
                         <Image src={imagePath}

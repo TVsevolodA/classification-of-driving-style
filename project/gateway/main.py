@@ -4,7 +4,6 @@ import requests
 import json
 
 app = FastAPI()
-# poetry export --output requirements.txt
 # TODO: Удалить или перенастроить после переноса UI в docker контейнер!
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(

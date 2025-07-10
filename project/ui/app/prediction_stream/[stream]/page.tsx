@@ -101,27 +101,26 @@ export default function Page() {
 
     const [activeTab, setActiveTab] = useState("live");
     const [liveData, setLiveData] = useState({
-    speed: 65,
-    rpm: 2100,
-    temperature: 89,
-    coordinates: { lat: 55.7558, lng: 37.6176 },
-    lastUpdate: '',
+        speed: 0,
+        rpm: 2100,
+        temperature: 85,
+        lastUpdate: '',
     });
 
     // Симуляция обновления данных в реальном времени
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setLiveData((prev) => ({
-            ...prev,
-            speed: Math.max(0, prev.speed + (Math.random() - 0.5) * 10),
-            rpm: Math.max(800, prev.rpm + (Math.random() - 0.5) * 200),
-            temperature: Math.max(70, Math.min(110, prev.temperature + (Math.random() - 0.5) * 5)),
-            lastUpdate: new Date().toLocaleTimeString(),
-            }))
-        }, 2000);
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         setLiveData((prev) => ({
+    //         ...prev,
+    //         speed: Math.max(10, prev.speed + (Math.random() - 0.5) * 10),
+    //         rpm: Math.max(1200, prev.rpm + (Math.random() - 0.5) * 200),
+    //         temperature: Math.max(70, Math.min(90, prev.temperature + (Math.random() - 0.5) * 5)),
+    //         lastUpdate: new Date().toLocaleTimeString(),
+    //         }));
+    //     }, 2000);
 
-        return () => clearInterval(interval);
-    }, []);
+    //     return () => clearInterval(interval);
+    // }, []);
 
     const getScoreColor = (score: number) => {
         if (score >= 90) return "success"
@@ -153,6 +152,11 @@ export default function Page() {
     const videoRef = useRef(null);
     const [messages, setMessages] = useState([]);
     const [drivingStyle, setDrivingStyle] = useState("Идет анализ стиля...");
+    const dictResult = new Map ([
+        [1,  'Агрессивный'],
+        [2,  'Нормальный'],
+        [3,  'Неопределенный'],
+    ]);
 
     useEffect(() => {
         setDrivingStyle( estimationAverageIndicator() );
@@ -161,11 +165,6 @@ export default function Page() {
     // Функция для оценивания усредненного показателя вождени
     function estimationAverageIndicator(): string {
         if (messages.length === 0) return "Идет анализ стиля...";
-        const dictResult = new Map ([
-            [1,  'Агрессивный'],
-            [2,  'Нормальный'],
-            [3,  'Неопределенный'],
-        ]);
         const sumElements = messages.reduce((partialSum, a) => partialSum + a, 0);
         const countElements = messages.length;
         const avgValue = Math.round(sumElements / countElements);
@@ -199,6 +198,13 @@ export default function Page() {
             const newDataObject = JSON.parse(event.data);
             if (Number(newDataObject["metadata"]["stream"]) === Number(stream)) {
                 // console.log(event.data);
+                setLiveData((prev) => ({
+                    ...prev,
+                    speed: newDataObject["metadata"]["speed"],
+                    rpm: Math.max(1200, prev.rpm + (Math.random() - 0.5) * 200),
+                    temperature: Math.max(70, Math.min(90, prev.temperature + (Math.random() - 0.5) * 5)),
+                    lastUpdate: new Date().toLocaleTimeString(),
+                }));
                 const predictionResult = Number(newDataObject["result"]);
                 setMessages(prev => {
                     let queue = [predictionResult, ...prev];

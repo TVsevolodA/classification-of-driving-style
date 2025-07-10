@@ -30,6 +30,13 @@ export default function RootLayout({
               </ul>
             </div>
 
+            <div className="ms-auto">
+              <a href="/auth" className="nav-link d-flex align-items-center" title="Вход в личный кабинет">
+                <i className="bi bi-person fs-2" style={{ fontSize: "1.5rem" }} />
+                
+              </a>
+            </div>
+
           </div>
         </nav>
         <main style={{ display: 'flex',  alignItems: 'center', justifyContent: 'center' }}>
