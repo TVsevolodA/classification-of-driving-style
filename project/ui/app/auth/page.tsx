@@ -6,8 +6,8 @@ import { useState } from "react";
 export default function AuthPage() {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
-        name: "",
-        email: "",
+        full_name: "",
+        username: "",
         password: "",
         confirmPassword: "",
     });
@@ -20,26 +20,45 @@ export default function AuthPage() {
         }))
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        let response;
         if (isLogin) {
-            console.log("Login attempt:", { email: formData.email, password: formData.password })
-            alert("Попытка входа в систему");
-        } else {
-            if (formData.password !== formData.confirmPassword) {
-            alert("Пароли не совпадают!");
-            return;
-            }
-            console.log("Registration attempt:", formData)
-            alert("Попытка регистрации");
+            // console.log("Login attempt:", { email: formData.username, password: formData.password });
+            console.log(JSON.stringify(formData));
+            // alert("Попытка входа в систему");
+            response = await fetch('http://localhost:7000/auth/signIn', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+                credentials: 'include',
+            });
         }
+        else {
+            if (formData.password !== formData.confirmPassword) {
+                alert("Пароли не совпадают!");
+                return;
+            }
+            const url: string = 'http://localhost:7000/auth/signUp';
+            response = await fetch(url, {
+                method: 'POST',
+                body: JSON.stringify({"username": formData.username, "password": formData.password}),
+                headers: {'Content-Type': 'application/json',},
+            });
+            console.log("Registration attempt:", formData)
+            // alert("Попытка регистрации");
+        }
+        const res = await response.json();
+        console.log(res);
     };
 
     const toggleMode = () => {
         setIsLogin(!isLogin);
         setFormData({
-            name: "",
-            email: "",
+            full_name: "",
+            username: "",
             password: "",
             confirmPassword: "",
         });
@@ -59,15 +78,15 @@ export default function AuthPage() {
                             <form onSubmit={handleSubmit}>
                                 {!isLogin && (
                                 <div className="mb-3">
-                                    <label htmlFor="name" className="form-label fw-semibold">
+                                    <label htmlFor="full_name" className="form-label fw-semibold">
                                     Полное имя
                                     </label>
                                     <input
                                     type="text"
                                     className="form-control form-control-lg"
-                                    id="name"
-                                    name="name"
-                                    value={formData.name}
+                                    id="full_name"
+                                    name="full_name"
+                                    value={formData.full_name}
                                     onChange={handleInputChange}
                                     placeholder="Введите ваше имя"
                                     required={!isLogin}
@@ -76,15 +95,15 @@ export default function AuthPage() {
                                 )}
 
                                 <div className="mb-3">
-                                    <label htmlFor="email" className="form-label fw-semibold">
+                                    <label htmlFor="username" className="form-label fw-semibold">
                                         Email адрес
                                     </label>
                                     <input
                                         type="email"
                                         className="form-control form-control-lg"
-                                        id="email"
-                                        name="email"
-                                        value={formData.email}
+                                        id="username"
+                                        name="username"
+                                        value={formData.username}
                                         onChange={handleInputChange}
                                         placeholder="example@email.com"
                                         required

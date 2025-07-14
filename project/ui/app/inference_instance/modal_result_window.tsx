@@ -57,9 +57,7 @@ const Modal = ({ isOpen, onClose, resultPredict }) => {
                                 className="btn btn-primary"
                                 onClick={onClose}
                                 value="Попробовать снова"/>
-                        <input type="button"
-                                className="btn btn-primary"
-                                value="На главную"/>
+                        <a type="button" className="btn btn-primary" href='/'>На главную</a>
                     </div>
                 </div>
             </div>
