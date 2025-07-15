@@ -327,20 +327,12 @@ export default function Page() {
                         </div>
 
                         <div className="border-top pt-3">
-                        <div className="row g-2">
-                            <div className="col-6">
-                            <button className="btn btn-outline-primary btn-sm w-100">
-                                <i className="bi bi-car-front me-2"></i>
-                                Детали
-                            </button>
+                            <div className="row g-2">
+                                <button className="btn btn-outline-primary btn-sm w-100">
+                                    <i className="bi bi-car-front me-2"></i>
+                                    Детали
+                                </button>
                             </div>
-                            <div className="col-6">
-                            <button className="btn btn-outline-secondary btn-sm w-100">
-                                <i className="bi bi-geo-alt me-2"></i>
-                                На карте
-                            </button>
-                            </div>
-                        </div>
                         </div>
                     </div>
                     </div>

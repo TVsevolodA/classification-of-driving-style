@@ -1,9 +1,11 @@
-"use client"
+"use client";
 
 import type React from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
+    const router = useRouter();
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
         full_name: "",
@@ -22,36 +24,27 @@ export default function AuthPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        let response;
+        let url: string;
+        let response: Response;
         if (isLogin) {
-            // console.log("Login attempt:", { email: formData.username, password: formData.password });
-            console.log(JSON.stringify(formData));
-            // alert("Попытка входа в систему");
-            response = await fetch('http://localhost:7000/auth/signIn', {
-                method: 'POST',
-                headers: {
-                'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-                credentials: 'include',
-            });
+            url = 'http://localhost:7000/auth/signIn';
         }
         else {
             if (formData.password !== formData.confirmPassword) {
                 alert("Пароли не совпадают!");
                 return;
             }
-            const url: string = 'http://localhost:7000/auth/signUp';
-            response = await fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({"username": formData.username, "password": formData.password}),
-                headers: {'Content-Type': 'application/json',},
-            });
-            console.log("Registration attempt:", formData)
-            // alert("Попытка регистрации");
+            url = 'http://localhost:7000/auth/signUp';
         }
-        const res = await response.json();
-        console.log(res);
+        response = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(formData),
+            credentials: 'include',
+        });
+        if ( response.ok ) {
+            router.push("/");
+        }
     };
 
     const toggleMode = () => {

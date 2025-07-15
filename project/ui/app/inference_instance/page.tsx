@@ -20,7 +20,6 @@ export default function Page() {
         const url = 'http://localhost:7000/inference_instance';
         const formData = new FormData(event.currentTarget);
         const data = formDataToMap(formData);
-        // console.log(JSON.stringify(data));
         const response = await fetch(url, {
             method: 'POST',
             body: JSON.stringify(data),

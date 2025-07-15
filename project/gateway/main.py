@@ -1,7 +1,6 @@
 from fastapi import Request, FastAPI, WebSocket, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import requests
 import json
 from datetime import datetime, timedelta, timezone
@@ -18,7 +17,6 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 fake_users_db = {
     "johndoe@example.com": {
@@ -78,7 +76,7 @@ async def get_token_from_cookies(request: Request) -> str:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is missing")
     return token
 
-# token: Annotated[str, Depends(oauth2_scheme)]
+
 async def get_current_user(token: Annotated[str, Depends(get_token_from_cookies)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -187,17 +185,21 @@ async def sign_in(request: Request, response: Response):
             value=token.access_token,
             httponly=True,
             secure=False,
-            samesite="lax",  # или "strict"
+            samesite="lax",
             max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             path="/",
         )
-        return {"message": "Logged in successfully"}
+        return {"message": "Успешнй вход в систему."}
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={}, status_code=400)
 
+@app.get(path="/logout")
+async def logout(response: Response) -> JSONResponse:
+    response.delete_cookie(key="token")
+    return JSONResponse(content={"message": "Успешно вышли из системы."}, status_code=200)
 
-@app.post("/token")
+
 async def login_for_access_token(username: str, password: str) -> Token:
     user = authenticate_user(fake_users_db, username, password)
     if not user:
@@ -213,9 +215,9 @@ async def login_for_access_token(username: str, password: str) -> Token:
     return Token(access_token=access_token, token_type="bearer")
 
 
-# @app.get("/users/me/", response_model=User)
-# async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
-#     return current_user
+@app.get("/users/me")
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
+    return current_user
 #
 #
 # @app.get("/users/me/items/")
