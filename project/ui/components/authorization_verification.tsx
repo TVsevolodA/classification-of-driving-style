@@ -1,4 +1,4 @@
-export default async function checkAuth() {
+export default async function сheckAuth() {
     const url = 'http://localhost:7000/users/me';
     try {
         const response = await fetch(url, {

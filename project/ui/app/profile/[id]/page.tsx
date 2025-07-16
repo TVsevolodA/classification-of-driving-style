@@ -1,6 +1,8 @@
-"use client"
+"use client";
+import { useRouter } from "next/navigation";
 
 export default function Component() {
+    const router = useRouter();
     const personalData = {
         pathProfilePhoto: "/",
         full_name: "Александр Иванов",
@@ -20,13 +22,32 @@ export default function Component() {
         stateNumber: "А123БВ77",
         mileage: 78.450,
     };
+
+    const logOut = async () => {
+        const url = 'http://localhost:7000/logout';
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+            });
+            console.log('Пользователь успешно вышел из системы.', response.status);
+            if ( response.ok ) {
+                router.push('/');
+            }
+        } catch (error) {
+            console.error('Произошла ошибка привыходе из системы:', error);
+        }
+    }
+
     return (
     <div className="min-vh-100" style={{ background: "linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%)" }}>
         <div className="container py-4">
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h1 className="display-5 fw-bold text-dark mb-0">Личный профиль</h1>
-                <button className="btn btn-outline-primary d-flex align-items-center gap-2">
+                <button className="btn btn-outline-primary d-flex align-items-center gap-2"
+                onClick={logOut}
+                >
                     <i className="bi bi-box-arrow-right"></i>
                     Выйти
                 </button>

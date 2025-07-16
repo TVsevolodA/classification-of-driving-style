@@ -23,6 +23,13 @@ fake_users_db = {
         "username": "johndoe@example.com",
         "full_name": "John Doe",
         "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+        "role": "admin",
+    },
+    "triv@example.com": {
+        "username": "triv@example.com",
+        "full_name": "Tri V",
+        "hashed_password": "$2b$12$KelOH415tiAnYwK2nfW6QePR/li73iWeP1FqDarf6ptzZtlMIoR1G",
+        "role": "user",
     }
 }
 
@@ -190,14 +197,17 @@ async def sign_in(request: Request, response: Response):
             path="/",
         )
         return {"message": "Успешнй вход в систему."}
+    except HTTPException as http_exc:
+        print(f'Ошибка в gateway, связанная с авторизацией:\n{http_exc}')
+        return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
-        return JSONResponse(content={}, status_code=400)
+        return JSONResponse(content={"error": repr(e)}, status_code=400)
 
 @app.get(path="/logout")
-async def logout(response: Response) -> JSONResponse:
+async def logout(response: Response):
     response.delete_cookie(key="token")
-    return JSONResponse(content={"message": "Успешно вышли из системы."}, status_code=200)
+    return {"message": "Успешно вышли из системы."}
 
 
 async def login_for_access_token(username: str, password: str) -> Token:
@@ -205,7 +215,7 @@ async def login_for_access_token(username: str, password: str) -> Token:
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Неверное имя пользователя или пароль.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

@@ -20,15 +20,37 @@ export default function Page() {
         const url = 'http://localhost:7000/inference_instance';
         const formData = new FormData(event.currentTarget);
         const data = formDataToMap(formData);
-        const response = await fetch(url, {
+        const response: Response = await fetch(url, {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {'Content-type': 'application/json'},
             credentials: 'include',
         });
-        const res = await response.json();
-        setPredict(res);
-        setIsOpen(true);
+        if ( response.status === 200 ) {
+            const res = await response.json();
+            setPredict(res);
+            setIsOpen(true);
+        }
+        else {
+            let errorContent = "Произошла непредвиденная ошибка. Повторите попытку позже.";
+            
+            const alertBlock = document.createElement("div");
+            alertBlock.className = "alert alert-danger";
+            alertBlock.role = "alert";
+
+            if ( response.status === 401 ) {
+                errorContent = 'У вас нет прав доступа для выполнения данной операции!&nbsp;<a href="/auth" class="alert-link">Авторизируйтесь</a>&nbsp;и попробуйте снова.';
+            }
+            alertBlock.innerHTML = [
+                '<div class="d-flex align-items-center justify-content-center">',
+                '   <i class="bi bi-exclamation-triangle fs-3" style="margin-right: 1rem;"></i>',
+                errorContent,
+                '</div>',
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"/>',
+            ].join('');
+            const mainBlock = document.getElementById("mainBlock");
+            mainBlock.prepend(alertBlock);
+        }
     }
 
     function getColor(percentage: number): string {
@@ -57,7 +79,7 @@ export default function Page() {
     const [predict, setPredict] = useState({});
 
     return (
-    <div className="min-vh-100" style={{ background: "linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%)" }}>
+    <div id="mainBlock" className="min-vh-100" style={{ background: "linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%)" }}>
         <div className="container py-5">
             <div className="row justify-content-center">
                 <div className="col-12 col-xl-10">
