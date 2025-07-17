@@ -5,7 +5,18 @@ import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+async function fetchRequest(url: string, method: string, dataToSend: Object) {
+    const response: Response = await fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(dataToSend),
+        credentials: 'include',
+    });
+    return response;
+}
+
 export default function AuthPage() {
+
     const router = useRouter();
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
@@ -27,29 +38,26 @@ export default function AuthPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        let url: string;
-        let response: Response;
-        if (isLogin) url = 'http://localhost:7000/auth/signIn';
+        let url: string = "http://localhost:7000/auth/";
+        if (isLogin) url += "signIn";
         else {
             if (formData.password !== formData.confirmPassword) {
                 setError("Пароли не совпадают!");
                 return;
             }
-            url = 'http://localhost:7000/auth/signUp';
+            url += "signUp";
         }
-        response = await fetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(formData),
-            credentials: 'include',
-        });
-        if ( response.ok ) {
+        const res: Response = await fetchRequest(url, 'POST', formData);
+        if ( url.includes("signUp") ) {
+            url = url.replace("signUp", "signIn");
+            await fetchRequest(url, 'POST', formData);
+        }
+        if ( res.ok ) {
             router.push("/");
         }
         else {
-            const exception = await response.json();
+            const exception = await res.json();
             setError(exception["error"] || "Ошибка авторизации.");
-            // console.log(exception["error"]);
         }
     };
 

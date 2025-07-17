@@ -48,7 +48,7 @@ export default function Component() {
                 <button className="btn btn-outline-primary d-flex align-items-center gap-2"
                 onClick={logOut}
                 >
-                    <i className="bi bi-box-arrow-right"></i>
+                    <i className="bi bi-box-arrow-left"></i>
                     Выйти
                 </button>
             </div>

@@ -2,6 +2,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import сheckAuth from "../components/authorization_verification";
+// import CheckAuth from "../components/authorization_verification";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 

@@ -41,6 +41,18 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+def create_user(db, user: User, password: str):
+    if not user.username in db:
+        user_password_hash = get_password_hash(password=password)
+        db[user.username] = {
+            "username": user.username,
+            "full_name": user.full_name,
+            "hashed_password": user_password_hash,
+            "role": "user",
+        }
+        return get_user(db, user.username)
+    return None
+
 
 def get_user(db, username: str):
     if username in db:
@@ -128,7 +140,7 @@ async def predict(input_parameters: dict) -> dict:
         return {}
 
 @app.post("/inference_instance")
-async def inference_instance(request: Request, current_user: User = Depends(get_current_user)):
+async def inference_instance(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
     """
     Выполнение единичного предсказания.
     :param current_user:
@@ -169,15 +181,24 @@ async def tracking(websocket: WebSocket):
         print(f"Произошла ошибка связи с клиентом.\nСоединение разорвано.\n{e}")
         connected_clients.remove(websocket)
 
-# @app.post("/auth/signUp")
-# async def sign_up(current_user: Annotated[User, Depends(get_current_active_user)]):
-#     try:
-#         # input_parameters = await request.json()
-#         # print(f"Пришли данные формы для регистрации: {input_parameters}")
-#         return JSONResponse(content="signUp", status_code=200)
-#     except Exception as e:
-#         print(f'Ошибка в gateway:\n{e}')
-#         return JSONResponse(content={}, status_code=400)
+@app.post("/auth/signUp")
+async def sign_up(request: Request):
+    try:
+        object_form = await request.json()
+        new_user = User(
+            username=object_form["username"],
+            full_name=object_form["full_name"],
+        )
+        created_user = create_user(db=fake_users_db, user=new_user, password=object_form["password"])
+        if created_user is not None:
+            return JSONResponse(content={"message": "Пользователь успешно зарегистрирован."}, status_code=201)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Пользователь с таким email уже существует.",
+        )
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={}, status_code=400)
 
 @app.post("/auth/signIn")
 async def sign_in(request: Request, response: Response):
@@ -228,8 +249,3 @@ async def login_for_access_token(username: str, password: str) -> Token:
 @app.get("/users/me")
 async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
-#
-#
-# @app.get("/users/me/items/")
-# async def read_own_items(current_user: Annotated[User, Depends(get_current_active_user)]):
-#     return [{"item_id": "Foo", "owner": current_user.username}]
