@@ -1,7 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
+import requestsToTheServer from "../../../components/requests_to_the_server";
+import EditProfileForm from "./modal_window_edit_profile";
 
-export default function Component() {
+export default function ProfilePage() {
     const router = useRouter();
     const personalData = {
         pathProfilePhoto: "/",
@@ -25,22 +27,32 @@ export default function Component() {
 
     const logOut = async () => {
         const url = 'http://localhost:7000/logout';
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                credentials: 'include',
-            });
-            console.log('Пользователь успешно вышел из системы.', response.status);
-            if ( response.ok ) {
-                router.push('/');
-            }
-        } catch (error) {
-            console.error('Произошла ошибка привыходе из системы:', error);
+        const logOutResult = await requestsToTheServer(url, 'GET');
+        if ( logOutResult.ok ) {
+            router.push('/');
+            router.refresh();
+        }
+        else {
+            console.error(logOutResult);
+        }
+    }
+
+    const deleteProfile = async () => {
+        const url = 'http://localhost:7000/delete/user';
+        const deletionResult = await requestsToTheServer(url, 'DELETE');
+        if ( deletionResult.ok ) {
+            router.push('/');
+            router.refresh();
+        }
+        else {
+            console.error(deletionResult);
         }
     }
 
     return (
     <div className="min-vh-100" style={{ background: "linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%)" }}>
+        <EditProfileForm/>
+
         <div className="container py-4">
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -96,9 +108,14 @@ export default function Component() {
 
             {/* Edit Profile Button */}
             <div className="text-center mb-4">
-                <button className="btn btn-primary btn-lg d-flex align-items-center justify-content-center gap-2 mx-auto px-4">
-                <i className="bi bi-pencil-square"></i>
-                Редактировать профиль
+                
+                <button
+                data-bs-toggle="modal"
+                data-bs-target="#editProfileModal"
+                className="btn btn-primary btn-lg d-flex align-items-center justify-content-center gap-2 mx-auto px-4"
+                >
+                    <i className="bi bi-pencil-square"></i>
+                    Редактировать профиль
                 </button>
             </div>
 
@@ -224,6 +241,15 @@ export default function Component() {
                     </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Delete Profile Button */}
+            <div className="text-center mb-4">
+                <button className="btn btn-danger btn-lg d-flex align-items-center justify-content-center gap-2 mx-auto px-4"
+                onClick={deleteProfile}>
+                <i className="bi bi-pencil-square"></i>
+                Удалить профиль
+                </button>
             </div>
         </div>
     </div>

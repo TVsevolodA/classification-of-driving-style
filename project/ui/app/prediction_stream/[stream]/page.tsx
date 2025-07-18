@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import "./page.css";
 // import RouteMap from '../../../components/RouteMap';
 
-export default function Page() {
+export default function IndividualStreamPage() {
     // Моковые данные для детального просмотра водителя
     const driverDetail = {
     id: 1,

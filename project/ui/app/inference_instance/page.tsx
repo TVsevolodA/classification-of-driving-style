@@ -5,8 +5,9 @@ import Modal from "./modal_result_window"
 import { VeincleLength } from "./Models/VeincleLength";
 import { AxlesNumber } from "./Models/AxlesNumber";
 import { VeincleSpeed } from "./Models/VeincleSpeed";
+import requestsToTheServer from "../../components/requests_to_the_server";
 
-export default function Page() {
+export default function PredictPage() {
     function formDataToMap(formData) {
         const map = new Map();
         for (const [key, value] of formData.entries()) {
@@ -20,15 +21,9 @@ export default function Page() {
         const url = 'http://localhost:7000/inference_instance';
         const formData = new FormData(event.currentTarget);
         const data = formDataToMap(formData);
-        const response: Response = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: {'Content-type': 'application/json'},
-            credentials: 'include',
-        });
-        if ( response.status === 200 ) {
-            const res = await response.json();
-            setPredict(res);
+        const predictResult = await requestsToTheServer(url, 'POST', JSON.stringify(data));
+        if ( predictResult.ok ) {
+            setPredict(predictResult.data);
             setIsOpen(true);
         }
         else {
@@ -38,7 +33,7 @@ export default function Page() {
             alertBlock.className = "alert alert-danger";
             alertBlock.role = "alert";
 
-            if ( response.status === 401 ) {
+            if ( predictResult.statusCode === 401 ) {
                 errorContent = 'У вас нет прав доступа для выполнения данной операции!&nbsp;<a href="/auth" class="alert-link">Авторизируйтесь</a>&nbsp;и попробуйте снова.';
             }
             alertBlock.innerHTML = [

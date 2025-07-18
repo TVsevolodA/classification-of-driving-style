@@ -53,6 +53,11 @@ def create_user(db, user: User, password: str):
         return get_user(db, user.username)
     return None
 
+def delete_user(db, user: User):
+    if user.username in db:
+        del db[user.username]
+        return user.username
+    return None
 
 def get_user(db, username: str):
     if username in db:
@@ -230,6 +235,17 @@ async def logout(response: Response):
     response.delete_cookie(key="token")
     return {"message": "Успешно вышли из системы."}
 
+@app.delete(path="/delete/user")
+async def delete_user_route(response: Response, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        response.delete_cookie(key="token")
+        deletion_result = delete_user(db=fake_users_db, user=current_user)
+        if deletion_result == current_user.username:
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+        return JSONResponse(content={"message": "Пользователя с такими данными не существует."}, status_code=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
 
 async def login_for_access_token(username: str, password: str) -> Token:
     user = authenticate_user(fake_users_db, username, password)

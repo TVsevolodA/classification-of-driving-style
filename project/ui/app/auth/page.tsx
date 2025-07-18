@@ -4,16 +4,8 @@ import "./page.css";
 import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import requestsToTheServer from "../../components/requests_to_the_server";
 
-async function fetchRequest(url: string, method: string, dataToSend: Object) {
-    const response: Response = await fetch(url, {
-        method: method,
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(dataToSend),
-        credentials: 'include',
-    });
-    return response;
-}
 
 export default function AuthPage() {
 
@@ -47,17 +39,13 @@ export default function AuthPage() {
             }
             url += "signUp";
         }
-        const res: Response = await fetchRequest(url, 'POST', formData);
-        if ( url.includes("signUp") ) {
-            url = url.replace("signUp", "signIn");
-            await fetchRequest(url, 'POST', formData);
-        }
-        if ( res.ok ) {
+        const signResult = await requestsToTheServer(url, 'POST', JSON.stringify(formData));
+        if ( signResult.ok ) {
             router.push("/");
+            router.refresh();
         }
         else {
-            const exception = await res.json();
-            setError(exception["error"] || "Ошибка авторизации.");
+            setError(signResult.error || "Ошибка авторизации.");
         }
     };
 

@@ -1,6 +1,8 @@
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
 
 const Modal = ({ isOpen, onClose, resultPredict }) => {
+    const router = useRouter();
     if (!isOpen) return null;
 
     function colorSelection(driveStyle: string) {
@@ -21,6 +23,12 @@ const Modal = ({ isOpen, onClose, resultPredict }) => {
         [2,  'Нормальный'],
         [3,  'Неопределенный'],
     ]);
+
+    const goToTheMainPage = () => {
+        router.push('/');
+        router.refresh();
+    };
+
     return (
         <div className="modal fade show"
                 style={{ display: 'block' }}
@@ -57,7 +65,9 @@ const Modal = ({ isOpen, onClose, resultPredict }) => {
                                 className="btn btn-primary"
                                 onClick={onClose}
                                 value="Попробовать снова"/>
-                        <a type="button" className="btn btn-primary" href='/'>На главную</a>
+                        <button type="button" className="btn btn-primary" onClick={goToTheMainPage}>
+                            На главную
+                        </button>
                     </div>
                 </div>
             </div>

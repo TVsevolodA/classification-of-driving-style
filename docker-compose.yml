@@ -6,12 +6,12 @@ services:
 #    ports:
 #      - 3000:3000
 
-#  device_emulator:
-#    image: device_emulator
-#    container_name: device_emulator
-#    build: "./project/device_emulator"
-#    ports:
-#      - 5010:5010
+  device_emulator:
+    image: device_emulator
+    container_name: device_emulator
+    build: "./project/device_emulator"
+    ports:
+      - 5010:5010
 
   gateway:
     image: gateway

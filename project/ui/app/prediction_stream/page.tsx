@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-export default function Page() {
+export default function MainStreamPage() {
     // Типы стилей вождения
     const drivingStyles = {
     safe: { label: "Безопасный", color: "success", textColor: "text-success", bgColor: "bg-success-subtle" },
