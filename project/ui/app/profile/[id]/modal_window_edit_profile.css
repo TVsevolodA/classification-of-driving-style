@@ -1,0 +1,98 @@
+/* Дополнительные стили для формы */
+.input-group-text {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+border: none;
+}
+
+.form-control:focus {
+border-color: #667eea;
+box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-outline-secondary {
+border-color: #667eea;
+color: #667eea;
+}
+
+.btn-outline-secondary:hover {
+background-color: #667eea;
+border-color: #667eea;
+}
+
+/* Анимация для полей ввода */
+.form-control,
+.input-group-text {
+transition: all 0.3s ease;
+}
+
+.input-group:hover .input-group-text {
+transform: scale(1.05);
+}
+
+/* Стили для телефонного поля */
+#userPhone {
+font-family: "Courier New", monospace;
+font-weight: bold;
+letter-spacing: 1px;
+}
+
+/* Красивые подсказки */
+.form-text {
+font-size: 0.875rem;
+color: #6c757d;
+display: flex;
+align-items: center;
+}
+
+.form-text i {
+color: #667eea;
+}
+
+/* Анимация для модального окна */
+.modal.fade .modal-dialog {
+transition: transform 0.4s ease-out;
+transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+transform: none;
+}
+
+/* Градиентный заголовок модального окна */
+.modal-header {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+}
+
+.modal-header .btn-close {
+filter: invert(1);
+}
+
+/* Стили для textarea */
+#userAddress {
+min-height: 80px;
+}
+
+/* Красивые кнопки */
+.btn-success {
+background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+border: none;
+}
+
+.btn-success:hover {
+background: linear-gradient(135deg, #218838 0%, #1ea080 100%);
+transform: translateY(-1px);
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary {
+background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+border: none;
+}
+
+.btn-secondary:hover {
+background: linear-gradient(135deg, #5a6268 0%, #3d4142 100%);
+transform: translateY(-1px);
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

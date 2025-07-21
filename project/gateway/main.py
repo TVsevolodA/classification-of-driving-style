@@ -18,20 +18,27 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-fake_users_db = {
-    "johndoe@example.com": {
+counter = 2
+fake_users_db = [
+    {
+        "id": 1,
         "username": "johndoe@example.com",
         "full_name": "John Doe",
         "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
         "role": "admin",
+        "phone": "+7 (999) 123-45-67",
+        "address": "Москва, Россия",
     },
-    "triv@example.com": {
+    {
+        "id": 2,
         "username": "triv@example.com",
         "full_name": "Tri V",
         "hashed_password": "$2b$12$KelOH415tiAnYwK2nfW6QePR/li73iWeP1FqDarf6ptzZtlMIoR1G",
         "role": "user",
+        "phone": "+7 (888) 987-65-43",
+        "address": "Саратов, Россия",
     }
-}
+]
 
 
 def verify_password(plain_password, hashed_password):
@@ -41,28 +48,43 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+
 def create_user(db, user: User, password: str):
-    if not user.username in db:
-        user_password_hash = get_password_hash(password=password)
-        db[user.username] = {
-            "username": user.username,
-            "full_name": user.full_name,
-            "hashed_password": user_password_hash,
-            "role": "user",
-        }
-        return get_user(db, user.username)
+    for db_user in db:
+        if db_user.get("username") == user.username:
+            return None
+    user_password_hash = get_password_hash(password=password)
+    db.append({
+        "id": 3,
+        "username": user.username,
+        "full_name": user.full_name,
+        "hashed_password": user_password_hash,
+        "role": "user",
+    })
+    return get_user(db, user.username)
+
+
+def delete_user(db, user: UserInDB):
+    try:
+        db.remove(user)
+        return user.username
+    except Exception:
+        return None
+
+def update_user(db, user: UserInDB):
+    for index, db_user in enumerate(db):
+        if db_user.get("id") == user.id:
+            if user.hashed_password == "":
+                user.hashed_password = db_user.get("hashed_password")
+            db[index] = user.model_dump()
+            return user
     return None
 
-def delete_user(db, user: User):
-    if user.username in db:
-        del db[user.username]
-        return user.username
-    return None
 
 def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
+    for db_user in db:
+        if db_user.get("username") == username:
+            return UserInDB(**db_user)
     return None
 
 
@@ -86,7 +108,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -94,8 +116,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 async def get_token_from_cookies(request: Request) -> str:
     token = request.cookies.get("token")
-    print("get_token_from_cookies")
-    print(request.cookies)
     if token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is missing")
     return token
@@ -110,8 +130,12 @@ async def get_current_user(token: Annotated[str, Depends(get_token_from_cookies)
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
+        expire = payload.get("exp")
+        expire_time = datetime.fromtimestamp(int(expire), tz=timezone.utc)
         if username is None:
             raise credentials_exception
+        elif (not expire) or (expire_time < datetime.now(timezone.utc)):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Токен истек')
         token_data = TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
@@ -119,6 +143,7 @@ async def get_current_user(token: Annotated[str, Depends(get_token_from_cookies)
     if user is None:
         raise credentials_exception
     return user
+
 
 app = FastAPI()
 app.add_middleware(
@@ -144,6 +169,7 @@ async def predict(input_parameters: dict) -> dict:
     except Exception:
         return {}
 
+
 @app.post("/inference_instance")
 async def inference_instance(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
     """
@@ -159,6 +185,7 @@ async def inference_instance(request: Request, current_user: Annotated[User, Dep
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={}, status_code=400)
+
 
 @app.websocket("/tracking")
 async def tracking(websocket: WebSocket):
@@ -186,6 +213,7 @@ async def tracking(websocket: WebSocket):
         print(f"Произошла ошибка связи с клиентом.\nСоединение разорвано.\n{e}")
         connected_clients.remove(websocket)
 
+
 @app.post("/auth/signUp")
 async def sign_up(request: Request):
     try:
@@ -205,13 +233,14 @@ async def sign_up(request: Request):
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={}, status_code=400)
 
+
 @app.post("/auth/signIn")
 async def sign_in(request: Request, response: Response):
     try:
-        object_form = await request.json()
+        object_form: dict = await request.json()
         token = await login_for_access_token(
-            username=object_form["username"],
-            password=object_form["password"]
+            username=object_form.get("username"),
+            password=object_form.get("password")
         )
         response.set_cookie(
             key="token",
@@ -230,13 +259,38 @@ async def sign_in(request: Request, response: Response):
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=400)
 
+
 @app.get(path="/logout")
 async def logout(response: Response):
     response.delete_cookie(key="token")
     return {"message": "Успешно вышли из системы."}
 
+
+@app.put(path="/update/user")
+async def update_user_route(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        object_form: dict = await request.json()
+        user_in_db = object_form.copy()
+        if object_form.get("password") == "":
+            user_in_db["hashed_password"] = ""
+        else:
+            hash_password = get_password_hash( password=object_form.get("password") )
+            user_in_db["hashed_password"] = hash_password
+        del user_in_db["password"]
+        del user_in_db["confirmPassword"]
+        print(object_form)
+        update_result = update_user(fake_users_db, UserInDB(**user_in_db))
+        if update_result is not None:
+            return Response(status_code=status.HTTP_200_OK)
+        else:
+            return Response(status_code=status.HTTP_409_CONFLICT)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)
+
+
 @app.delete(path="/delete/user")
-async def delete_user_route(response: Response, current_user: Annotated[User, Depends(get_current_user)]):
+async def delete_user_route(response: Response, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
         response.delete_cookie(key="token")
         deletion_result = delete_user(db=fake_users_db, user=current_user)
@@ -246,6 +300,7 @@ async def delete_user_route(response: Response, current_user: Annotated[User, De
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
+
 
 async def login_for_access_token(username: str, password: str) -> Token:
     user = authenticate_user(fake_users_db, username, password)
@@ -259,9 +314,9 @@ async def login_for_access_token(username: str, password: str) -> Token:
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token)
 
 
 @app.get("/users/me")
-async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
+async def read_users_me(current_user: Annotated[UserInDB, Depends(get_current_user)]):
     return current_user
