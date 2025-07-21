@@ -7,7 +7,6 @@ class User(BaseModel):
 
 
 class UserInDB(User):
-    id: int
     phone: str | None = None
     address: str | None = None
     hashed_password: str

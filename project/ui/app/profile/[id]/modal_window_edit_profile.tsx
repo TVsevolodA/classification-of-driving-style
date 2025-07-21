@@ -1,10 +1,13 @@
 "use client"
 
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import requestsToTheServer from "../../../components/requests_to_the_server";
 
 
 export default function EditProfileForm({ isOpen, onClose, userData }) {
+    const router = useRouter();
+
     const [formData, setFormData] = useState({
         ...{ password: "", confirmPassword: "", },
         ...userData,
@@ -51,7 +54,6 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
         event.preventDefault();
         const url = 'http://localhost:7000/update/user';
         let fd = new FormData(event.currentTarget);
-        fd.append("id", formData["id"]);
         const data = formDataToMap(fd);
         console.log(JSON.stringify(data));
         const updateUserResult = await requestsToTheServer(url, 'PUT', JSON.stringify(data));
@@ -65,17 +67,19 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
             message = "Произошла непредвиденная ошибка. Повторите попытку позже.";
             alertBlock.className = "alert alert-danger";
         }
-        onClose();
         alertBlock.role = "alert";
         alertBlock.innerHTML = [
-            '<div class="d-flex align-items-center justify-content-center">',
-            '   <i class="bi bi-exclamation-triangle fs-3" style="margin-right: 1rem;"></i>',
-            message,
+            '<div class="d-flex align-items-center justify-content-between">',
+            '   <div class="d-flex align-items-center">',
+            '       <i class="bi bi-exclamation-triangle fs-3" style="margin-right: 1rem;"></i>',
+                    message,
+            '   </div>',
+            '   <div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"/></div>',
             '</div>',
-            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"/>',
         ].join('');
         const mainBlock = document.getElementById("mainBlock");
         mainBlock.prepend(alertBlock);
+        router.refresh();
     }
 
     return (

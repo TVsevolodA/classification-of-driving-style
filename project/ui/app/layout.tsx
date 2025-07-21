@@ -9,7 +9,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if ( token !== undefined ) {
     const url = 'http://localhost:7000/users/me';
     const reqObject = await requestsToTheServer(url, 'GET', null, { cookie: `token=${token.value}` });
-    user = reqObject.data;
+    if ( reqObject.ok ) user = reqObject.data;
   }
   return (
   <html lang="ru" suppressHydrationWarning>

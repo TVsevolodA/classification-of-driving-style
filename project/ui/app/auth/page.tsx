@@ -41,8 +41,21 @@ export default function AuthPage() {
         }
         const signResult = await requestsToTheServer(url, 'POST', JSON.stringify(formData));
         if ( signResult.ok ) {
-            router.push("/");
-            router.refresh();
+            if ( url.endsWith("signUp") ) {
+                url = url.replace("signUp", "signIn");
+                const singInAfterRegistrationResult = await requestsToTheServer(url, 'POST', JSON.stringify(formData));
+                if ( signResult.ok ) {
+                    router.push("/");
+                    router.refresh();
+                }
+                else {
+                    setError(signResult.error || "Ошибка авторизации.");
+                }
+            }
+            else {
+                router.push("/");
+                router.refresh();
+            }
         }
         else {
             setError(signResult.error || "Ошибка авторизации.");

@@ -18,10 +18,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-counter = 2
-fake_users_db = [
-    {
-        "id": 1,
+fake_users_db = {
+    "johndoe@example.com": {
         "username": "johndoe@example.com",
         "full_name": "John Doe",
         "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
@@ -29,8 +27,7 @@ fake_users_db = [
         "phone": "+7 (999) 123-45-67",
         "address": "Москва, Россия",
     },
-    {
-        "id": 2,
+    "triv@example.com": {
         "username": "triv@example.com",
         "full_name": "Tri V",
         "hashed_password": "$2b$12$KelOH415tiAnYwK2nfW6QePR/li73iWeP1FqDarf6ptzZtlMIoR1G",
@@ -38,7 +35,7 @@ fake_users_db = [
         "phone": "+7 (888) 987-65-43",
         "address": "Саратов, Россия",
     }
-]
+}
 
 
 def verify_password(plain_password, hashed_password):
@@ -50,41 +47,39 @@ def get_password_hash(password):
 
 
 def create_user(db, user: User, password: str):
-    for db_user in db:
-        if db_user.get("username") == user.username:
-            return None
-    user_password_hash = get_password_hash(password=password)
-    db.append({
-        "id": 3,
-        "username": user.username,
-        "full_name": user.full_name,
-        "hashed_password": user_password_hash,
-        "role": "user",
-    })
-    return get_user(db, user.username)
+    if not user.username in db:
+        user_password_hash = get_password_hash(password=password)
+        db[user.username] = {
+            "username": user.username,
+            "full_name": user.full_name,
+            "hashed_password": user_password_hash,
+            "role": "user",
+        }
+        return get_user(db, user.username)
+    return None
 
+def update_user(db, current_user: UserInDB, update_user: UserInDB):
+    if  ( current_user.username != update_user.username
+          and not update_user.username in db )\
+        or ( current_user.username == update_user.username ):
+        current_role = db[current_user.username].get("role")
+        del db[current_user.username]
+        db[update_user.username] = update_user.model_dump()
+        db[update_user.username]["role"] = current_role
+        return db[update_user.username]
+    return None
 
-def delete_user(db, user: UserInDB):
-    try:
-        db.remove(user)
+def delete_user(db, user: User):
+    if user.username in db:
+        del db[user.username]
         return user.username
-    except Exception:
-        return None
-
-def update_user(db, user: UserInDB):
-    for index, db_user in enumerate(db):
-        if db_user.get("id") == user.id:
-            if user.hashed_password == "":
-                user.hashed_password = db_user.get("hashed_password")
-            db[index] = user.model_dump()
-            return user
     return None
 
 
 def get_user(db, username: str):
-    for db_user in db:
-        if db_user.get("username") == username:
-            return UserInDB(**db_user)
+    if username in db:
+        user_dict = db[username]
+        return UserInDB(**user_dict)
     return None
 
 
@@ -237,10 +232,10 @@ async def sign_up(request: Request):
 @app.post("/auth/signIn")
 async def sign_in(request: Request, response: Response):
     try:
-        object_form: dict = await request.json()
+        object_form = await request.json()
         token = await login_for_access_token(
-            username=object_form.get("username"),
-            password=object_form.get("password")
+            username=object_form["username"],
+            password=object_form["password"]
         )
         response.set_cookie(
             key="token",
@@ -267,30 +262,32 @@ async def logout(response: Response):
 
 
 @app.put(path="/update/user")
-async def update_user_route(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+async def update_user_route(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
         object_form: dict = await request.json()
         user_in_db = object_form.copy()
         if object_form.get("password") == "":
-            user_in_db["hashed_password"] = ""
+            user_in_db["hashed_password"] = current_user.hashed_password
         else:
             hash_password = get_password_hash( password=object_form.get("password") )
             user_in_db["hashed_password"] = hash_password
         del user_in_db["password"]
         del user_in_db["confirmPassword"]
-        print(object_form)
-        update_result = update_user(fake_users_db, UserInDB(**user_in_db))
-        if update_result is not None:
-            return Response(status_code=status.HTTP_200_OK)
-        else:
-            return Response(status_code=status.HTTP_409_CONFLICT)
+        update_result = update_user(db=fake_users_db, current_user=current_user, update_user=UserInDB(**user_in_db))
+        print(update_result)
+        if update_result is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Пользователь с такой почтой уже зарегистрирован.",
+            )
+        return {"message": "Данные успешно обновлены."}
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)
 
 
 @app.delete(path="/delete/user")
-async def delete_user_route(response: Response, current_user: Annotated[UserInDB, Depends(get_current_user)]):
+async def delete_user_route(response: Response, current_user: Annotated[User, Depends(get_current_user)]):
     try:
         response.delete_cookie(key="token")
         deletion_result = delete_user(db=fake_users_db, user=current_user)
@@ -314,9 +311,9 @@ async def login_for_access_token(username: str, password: str) -> Token:
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token)
+    return Token(access_token=access_token)  # , token_type="bearer"
 
 
 @app.get("/users/me")
-async def read_users_me(current_user: Annotated[UserInDB, Depends(get_current_user)]):
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
