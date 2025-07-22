@@ -44,12 +44,12 @@ export default function AuthPage() {
             if ( url.endsWith("signUp") ) {
                 url = url.replace("signUp", "signIn");
                 const singInAfterRegistrationResult = await requestsToTheServer(url, 'POST', JSON.stringify(formData));
-                if ( signResult.ok ) {
+                if ( singInAfterRegistrationResult.ok ) {
                     router.push("/");
                     router.refresh();
                 }
                 else {
-                    setError(signResult.error || "Ошибка авторизации.");
+                    setError(singInAfterRegistrationResult.error || "Ошибка авторизации.");
                 }
             }
             else {
@@ -76,13 +76,13 @@ export default function AuthPage() {
         <div className="container min-vh-100 bg-light">
             {error && (
                 <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                {error}
-                <button type="button"
-                        className="btn-close"
-                        data-bs-dismiss="alert"
-                        aria-label="Закрыть"
-                        onClick={() => setError(null)}>
-                </button>
+                    {error}
+                    <button type="button"
+                            className="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Закрыть"
+                            onClick={() => setError(null)}>
+                    </button>
                 </div>
             )}
 

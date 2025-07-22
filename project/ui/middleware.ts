@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
     // 1. Перечисляем охраняемые и общедоступные маршруты.
-    const protectedRoutes = ['/inference_instance', '/prediction_stream', '/profile'];
+    const protectedRoutes = ['/inference_instance', '/prediction_stream', '/profile', '/garage'];
     const publicRoutes = ['/auth', '/'];
 
     // 2. Проверяем, является ли текущий маршрут защищенным или общедоступным.

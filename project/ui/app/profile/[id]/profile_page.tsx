@@ -53,7 +53,7 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
     const [isOpen, setIsOpen] = useState(false);
     const closeModal = () => setIsOpen(!isOpen);
     return (
-    <div className="min-vh-100" style={{ background: "linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%)" }}>
+    <div className="min-vh-100" id="mainBlock" style={{ background: "linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%)" }}>
         <EditProfileForm isOpen={isOpen} onClose={closeModal} userData={userData} />
 
         <div className="container py-4">

@@ -1,0 +1,39 @@
+.car-card {
+    transition: box-shadow 0.3s ease;
+}
+
+.car-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.license-plate {
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-align: center;
+    padding: 8px 16px;
+    letter-spacing: 2px;
+}
+
+.empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.car-icon {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
+}

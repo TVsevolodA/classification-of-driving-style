@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import requestsToTheServer from "../../../components/requests_to_the_server";
+import "./modal_window_edit_profile.css";
 
 
 export default function EditProfileForm({ isOpen, onClose, userData }) {
@@ -59,23 +60,29 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
         const updateUserResult = await requestsToTheServer(url, 'PUT', JSON.stringify(data));
         const alertBlock = document.createElement("div");
         let message = "";
+        let classIcon = "";
         if ( updateUserResult.ok ) {
             message = "Данные успешно обновлены.";
+            classIcon = "bi-check-circle";
             alertBlock.className = "alert alert-success";
         }
         else {
-            message = "Произошла непредвиденная ошибка. Повторите попытку позже.";
+            if ( updateUserResult.data["error"] !== undefined ) {
+                message = updateUserResult.data["error"];
+            }
+            else {
+                message = "Произошла непредвиденная ошибка. Повторите попытку позже.";
+            }
+            classIcon = "bi-exclamation-octagon";
             alertBlock.className = "alert alert-danger";
         }
         alertBlock.role = "alert";
         alertBlock.innerHTML = [
-            '<div class="d-flex align-items-center justify-content-between">',
-            '   <div class="d-flex align-items-center">',
-            '       <i class="bi bi-exclamation-triangle fs-3" style="margin-right: 1rem;"></i>',
-                    message,
-            '   </div>',
-            '   <div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"/></div>',
+            '<div class="d-flex align-items-center">',
+            `   <i class="bi ${classIcon} fs-3" style="margin-right: 1rem;"></i>`,
+                message,
             '</div>',
+            '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"/>',
         ].join('');
         const mainBlock = document.getElementById("mainBlock");
         mainBlock.prepend(alertBlock);
@@ -83,8 +90,7 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
     }
 
     return (
-    <div id="mainBlock">
-        <div
+    <div
             className="modal fade"
             id="editProfileModal"
             tabIndex={-1}
@@ -261,7 +267,7 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                                     <i className="bi bi-x-circle me-2"></i>
                                     Отмена
                                 </button>
-                                <button type="submit" className="btn btn-success">
+                                <button type="submit" className="btn btn-success" data-bs-dismiss="modal">
                                     <i className="bi bi-check-circle me-2"></i>
                                     Сохранить изменения
                                 </button>
@@ -269,7 +275,6 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                         </form>
                     </div>
                 </div>
-        </div>
     </div>
     );
 }

@@ -1,3 +1,18 @@
+.alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    bottom: 15px;
+    padding-left: 2.5%;
+    padding-right: 2.5%;
+    left: 0;
+    right: 0;
+    max-width: 70%;
+    margin: 0 auto;
+    z-index: 1;
+}
+
 /* Дополнительные стили для формы */
 .input-group-text {
 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

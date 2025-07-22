@@ -2,17 +2,19 @@
 import { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { useUser } from "./user_context";
 
-export default function ClientLayout({ children, user }: { children: React.ReactNode; user: Object;}) {
+export default function ClientLayout({ children }: { children: React.ReactNode; }) {
   useEffect(() => {
     import("bootstrap/dist/js/bootstrap.js");
   }, []);
-    return (
-    <body>
+  const user = useUser();
+  return (
+  <body>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
         <div className="container-fluid">
           <a href="/" className="navbar-brand d-flex align-items-center">
-            <i className="me-2 bi bi-car-front fs-2"></i>
+            <i className="me-2 bi bi-truck fs-2"></i>
             <span className="fw-bold">DriveClassifier</span>
           </a>
 
@@ -34,17 +36,27 @@ export default function ClientLayout({ children, user }: { children: React.React
 
             <ul className="navbar-nav">
               {user !== null ? (
-                <li className="nav-item">
-                  <a href={`/profile/${user["full_name"]}`} className="nav-link d-flex align-items-center">
-                    <i className="me-1 bi bi-person fs-3"/>
-                    {user["full_name"]}
-                  </a>
-                </li>
+                <>
+                  <li className="nav-item">
+                    <a href="/garage" className="nav-link d-flex align-items-center">
+                      <i className="me-1 bi bi-car-front fs-3"/>
+                      Гараж
+                    </a>
+                  </li>
+                  <li className="nav-item">
+                    <a href={`/profile/${user["full_name"]}`} className="nav-link d-flex align-items-center">
+                      <i className="me-1 bi bi-person fs-3"/>
+                      {user["full_name"]}
+                    </a>
+                  </li>
+                </>
               ) : (
+                <li className="nav-item">
                   <a href="/auth" className="nav-link d-flex align-items-center">
                     <i className="me-1 bi bi-box-arrow-in-right fs-3"/>
                     Войти
                   </a>
+                </li>
               )}
             </ul>
           </div>
@@ -53,6 +65,6 @@ export default function ClientLayout({ children, user }: { children: React.React
       <main style={{ display: 'flex',  alignItems: 'center', justifyContent: 'center' }}>
         {children}
       </main>
-    </body>
-    );
+  </body>
+  );
 }

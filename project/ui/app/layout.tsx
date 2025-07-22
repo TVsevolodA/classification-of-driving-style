@@ -1,5 +1,6 @@
 import requestsToTheServer from "../components/requests_to_the_server";
 import ClientLayout from "./client_layout";
+import { UserContextProvider }  from "./user_context";
 import { cookies } from 'next/headers';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -13,9 +14,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
   return (
   <html lang="ru" suppressHydrationWarning>
-    <ClientLayout user={user}>
-      {children}
-    </ClientLayout>
+    <UserContextProvider user={user}>
+      <ClientLayout>
+        {children}
+      </ClientLayout>
+    </UserContextProvider>
   </html>
   );
 }

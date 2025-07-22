@@ -37,6 +37,49 @@ fake_users_db = {
     }
 }
 
+fake_cars_db = {
+    "T124CC|64RUS": {
+        "owner": "triv@example.com",
+        "brand": "Hyundai",
+        "model": "IX35",
+        "year": 2012,
+        "licensePlate": "T826MC|64RUS",
+        "mileage": 150000
+    },
+    "T206TC|164RUS": {
+        "owner": "triv@example.com",
+        "brand": "Lada",
+        "model": "Granta",
+        "year": 2018,
+        "licensePlate": "T206TC|164RUS",
+        "mileage": 100000
+    },
+    "А123ВC|777RUS": {
+        "owner": "johndoe@example.com",
+        "brand": "Toyota",
+        "model": "Camry",
+        "year": 2020,
+        "licensePlate": "А123ВC|777RUS",
+        "mileage": 45000
+    },
+    "B456EK|123RUS": {
+        "owner": "johndoe@example.com",
+        "brand": "BMW",
+        "model": "X5",
+        "year": 2019,
+        "licensePlate": "B456EK|123RUS",
+        "mileage": 62000
+    },
+    "M789MO|164RUS": {
+        "owner": "johndoe@example.com",
+        "brand": "Mercedes-Benz",
+        "model": "C-class",
+        "year": 2021,
+        "licensePlate": "M789MO|164RUS",
+        "mileage": 28000
+    },
+}
+
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -58,6 +101,7 @@ def create_user(db, user: User, password: str):
         return get_user(db, user.username)
     return None
 
+
 def update_user(db, current_user: UserInDB, update_user: UserInDB):
     if  ( current_user.username != update_user.username
           and not update_user.username in db )\
@@ -68,6 +112,7 @@ def update_user(db, current_user: UserInDB, update_user: UserInDB):
         db[update_user.username]["role"] = current_role
         return db[update_user.username]
     return None
+
 
 def delete_user(db, user: User):
     if user.username in db:
@@ -81,6 +126,16 @@ def get_user(db, username: str):
         user_dict = db[username]
         return UserInDB(**user_dict)
     return None
+
+
+def get_cars(db, username: str = None):
+    if username is None:
+        return  list(db.values())
+    user_cars: list = list()
+    for key, value in db.items():
+        if value.get("owner") == username:
+            user_cars.append(value)
+    return user_cars
 
 
 def authenticate_user(fake_db, username: str, password: str):
@@ -281,6 +336,9 @@ async def update_user_route(request: Request, current_user: Annotated[UserInDB, 
                 detail="Пользователь с такой почтой уже зарегистрирован.",
             )
         return {"message": "Данные успешно обновлены."}
+    except HTTPException as http_exc:
+        print(f'Ошибка в gateway, связанная с обновлением пользователя:\n{http_exc}')
+        return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)
@@ -315,5 +373,25 @@ async def login_for_access_token(username: str, password: str) -> Token:
 
 
 @app.get("/users/me")
-async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
+async def read_users(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
+
+@app.get("/cars/me")
+async def read_cars_me(current_user: Annotated[User, Depends(get_current_user)]):
+    return get_cars(db=fake_cars_db, username=current_user.username)
+
+@app.get("/cars/all")
+async def read_cars_all(current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        if current_user.role == "admin":
+            return get_cars(db=fake_cars_db)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="У вас нет прав на просмотр содержимого.",
+        )
+    except HTTPException as http_exc:
+        print(f'Ошибка в gateway, связанная с правами доступа:\n{http_exc}')
+        return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_403_FORBIDDEN)
