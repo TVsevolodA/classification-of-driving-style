@@ -11,6 +11,7 @@ from passlib.context import CryptContext
 
 from Models.user import *
 from Models.token import *
+from Models.car import *
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
@@ -34,11 +35,20 @@ fake_users_db = {
         "role": "user",
         "phone": "+7 (888) 987-65-43",
         "address": "Саратов, Россия",
+    },
+    "ivanov@example.ru": {
+        "username": "ivanov@example.ru",
+        "full_name": "Иванов Иван",
+        "hashed_password": "$2b$12$KelOH415tiAnYwK2nfW6QePR/li73iWeP1FqDarf6ptzZtlMIoR1G",
+        "role": "user",
+        "phone": "+7 (912) 345-67-89",
+        "address": "Энгельс, Россия",
     }
 }
 
 fake_cars_db = {
-    "T124CC|64RUS": {
+    "1HGCM82633A004352": {
+        "vin": "1HGCM82633A004352",
         "owner": "triv@example.com",
         "brand": "Hyundai",
         "model": "IX35",
@@ -46,7 +56,8 @@ fake_cars_db = {
         "licensePlate": "T826MC|64RUS",
         "mileage": 150000
     },
-    "T206TC|164RUS": {
+    "WDDHF5KB6EA123456": {
+        "vin": "WDDHF5KB6EA123456",
         "owner": "triv@example.com",
         "brand": "Lada",
         "model": "Granta",
@@ -54,7 +65,8 @@ fake_cars_db = {
         "licensePlate": "T206TC|164RUS",
         "mileage": 100000
     },
-    "А123ВC|777RUS": {
+    "KL1AF6362AK000789": {
+        "vin": "KL1AF6362AK000789",
         "owner": "johndoe@example.com",
         "brand": "Toyota",
         "model": "Camry",
@@ -62,7 +74,8 @@ fake_cars_db = {
         "licensePlate": "А123ВC|777RUS",
         "mileage": 45000
     },
-    "B456EK|123RUS": {
+    "2T1BR18E5WC789012": {
+        "vin": "2T1BR18E5WC789012",
         "owner": "johndoe@example.com",
         "brand": "BMW",
         "model": "X5",
@@ -70,7 +83,8 @@ fake_cars_db = {
         "licensePlate": "B456EK|123RUS",
         "mileage": 62000
     },
-    "M789MO|164RUS": {
+    "3VWDS71K08M345678": {
+        "vin": "3VWDS71K08M345678",
         "owner": "johndoe@example.com",
         "brand": "Mercedes-Benz",
         "model": "C-class",
@@ -80,6 +94,173 @@ fake_cars_db = {
     },
 }
 
+fake_drivers_db = {
+    "1234567890": {
+        "director": "ivanov@example.ru",
+        "license_number": "1234 567890",
+        "expiry_date": "2027-12-31",
+        "full_name": "Иванов Иван Иванович",
+        "phone": "79123456789",
+        "email": "ivanov@example.ru",
+        "driving_experience": 5,
+        "issue_date": "2018-11-15",
+        "driving_rating": 4.5,
+        "insurance_expiry_date": "2025-06-30"
+    },
+    "2345678901": {
+        "director": "triv@example.com",
+        "license_number": "2345 678901",
+        "expiry_date": "2026-09-05",
+        "full_name": "Петров Петр Петрович",
+        "phone": "79234567890",
+        "email": "petrov@example.ru",
+        "driving_experience": 7,
+        "issue_date": "2016-04-22",
+        "driving_rating": 3.7,
+        "insurance_expiry_date": "2024-12-15"
+    },
+    "3456789012": {
+        "director": "triv@example.com",
+        "license_number": "3456 789012",
+        "expiry_date": "2028-03-18",
+        "full_name": "Сидорова Елена Сергеевна",
+        "phone": "79345678901",
+        "email": "sidorova@example.ru",
+        "driving_experience": 3,
+        "issue_date": "2020-07-03",
+        "driving_rating": 4.8,
+        "insurance_expiry_date": "2025-01-10"
+    },
+    "4567890123": {
+        "director": "triv@example.com",
+        "license_number": "4567 890123",
+        "expiry_date": "2027-11-28",
+        "full_name": "Кузнецов Артем Викторович",
+        "phone": "89456789012",
+        "email": "kuznetsov@example.ru",
+        "driving_experience": 10,
+        "issue_date": "2013-03-10",
+        "driving_rating": 4.2,
+        "insurance_expiry_date": "2024-11-01"
+    },
+    "5678901234": {
+        "director": "ivanov@example.ru",
+        "license_number": "5678 901234",
+        "expiry_date": "2026-07-14",
+        "full_name": "Смирнова Анастасия Дмитриевна",
+        "phone": "89678901234",
+        "email": "smirnova@example.ru",
+        "driving_experience": 2,
+        "issue_date": "2021-09-05",
+        "driving_rating": 3.9,
+        "insurance_expiry_date": "2024-09-20"
+    },
+    "6789012345": {
+        "director": "ivanov@example.ru",
+        "license_number": "6789 012345",
+        "expiry_date": "2029-05-22",
+        "full_name": "Федоров Максим Александрович",
+        "phone": "89789012345",
+        "email": "fedorov@example.ru",
+        "driving_experience": 8,
+        "issue_date": "2015-12-30",
+        "driving_rating": 4.0,
+        "insurance_expiry_date": "2025-04-15"
+    },
+    "7890123456": {
+        "director": "ivanov@example.ru",
+        "license_number": "7890 123456",
+        "expiry_date": "2026-02-10",
+        "full_name": "Морозова Ольга Игоревна",
+        "phone": "89890123456",
+        "email": "morozova@example.ru",
+        "driving_experience": 6,
+        "issue_date": "2017-08-17",
+        "driving_rating": 4.6,
+        "insurance_expiry_date": "2024-08-05"
+    },
+    "8901234567": {
+        "director": "ivanov@example.ru",
+        "license_number": "8901 234567",
+        "expiry_date": "2028-08-07",
+        "full_name": "Белов Денис Олегович",
+        "phone": "89901234567",
+        "email": "belov@example.ru",
+        "driving_experience": 1,
+        "issue_date": "2022-04-01",
+        "driving_rating": 3.0,
+        "insurance_expiry_date": "2024-12-31"
+    },
+    "9012345678": {
+        "director": "ivanov@example.ru",
+        "license_number": "9012 345678",
+        "expiry_date": "2025-10-19",
+        "full_name": "Григорьева Валентина Сергеевна",
+        "phone": "89012345678",
+        "email": "grigorieva@example.ru",
+        "driving_experience": 12,
+        "issue_date": "2011-05-25",
+        "driving_rating": 4.9,
+        "insurance_expiry_date": "2025-03-01"
+    },
+    "0123456789": {
+        "director": "ivanov@example.ru",
+        "license_number": "0123 456789",
+        "expiry_date": "2027-04-03",
+        "full_name": "Козлов Владимир Анатольевич",
+        "phone": "79183456789",
+        "email": "kozlov@example.ru",
+        "driving_experience": 9,
+        "issue_date": "2014-10-08",
+        "driving_rating": 3.5,
+        "insurance_expiry_date": "2024-10-15"
+    }
+}
+
+fake_driver_car = {
+    1: {
+        "id": 1,
+        "driver_id": "1234567890",
+        "car_id": "1HGCM82633A004352",
+        "start_date": "2026-07-14",
+        "end_date": "2026-07-14"
+    },
+    2: {
+        "id": 2,
+        "driver_id": "2345678901",
+        "car_id": "WDDHF5KB6EA123456",
+        "start_date": "2026-07-14",
+        "end_date": "2026-07-14"
+    },
+    3: {
+        "id": 3,
+        "driver_id": "1234567890",
+        "car_id": "WDDHF5KB6EA123456",
+        "start_date": "2026-07-14",
+        "end_date": "2026-07-14"
+    },
+    4: {
+        "id": 4,
+        "driver_id": "2345678901",
+        "car_id": "3VWDS71K08M345678",
+        "start_date": "2026-07-14",
+        "end_date": "2026-07-14"
+    },
+    5: {
+        "id": 5,
+        "driver_id": "0123456789",
+        "car_id": "3VWDS71K08M345678",
+        "start_date": "2026-07-14",
+        "end_date": "2026-07-14"
+    },
+    6: {
+        "id": 6,
+        "driver_id": "0123456789",
+        "car_id": "3VWDS71K08M345678",
+        "start_date": "2026-07-14",
+        "end_date": "2026-07-14"
+    }
+}
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -102,21 +283,36 @@ def create_user(db, user: User, password: str):
     return None
 
 
-def update_user(db, current_user: UserInDB, update_user: UserInDB):
-    if  ( current_user.username != update_user.username
-          and not update_user.username in db )\
-        or ( current_user.username == update_user.username ):
+def update_user(db, current_user: UserInDB, new_user: UserInDB):
+    if  ( current_user.username != new_user.username
+          and not new_user.username in db )\
+        or ( current_user.username == new_user.username ):
+        if current_user.username != new_user.username:
+            # Если пользователь изменил почту, то необходимо обновить данные в зависимых таблицах
+            for key, value in fake_cars_db:
+                if value.get("owner") == current_user.username:
+                    fake_cars_db[key]["owner"] = current_user.username
+            for key, value in fake_drivers_db:
+                if value.get("director") == current_user.username:
+                    fake_cars_db[key]["director"] = current_user.username
         current_role = db[current_user.username].get("role")
         del db[current_user.username]
-        db[update_user.username] = update_user.model_dump()
-        db[update_user.username]["role"] = current_role
-        return db[update_user.username]
+        db[new_user.username] = new_user.model_dump()
+        db[new_user.username]["role"] = current_role
+        return db[new_user.username]
     return None
 
 
 def delete_user(db, user: User):
     if user.username in db:
         del db[user.username]
+        # Удалить данные из зависимых таблиц
+        for key, value in list(fake_cars_db.items()):
+            if value.get("owner") == user.username:
+                del fake_cars_db[key]
+        for key, value in list(fake_drivers_db.items()):
+            if value.get("director") == user.username:
+                fake_cars_db[key]["director"] = user.username
         return user.username
     return None
 
@@ -136,6 +332,47 @@ def get_cars(db, username: str = None):
         if value.get("owner") == username:
             user_cars.append(value)
     return user_cars
+
+
+def update_car(db, vin: str, new_car: Car):
+    if vin in db:
+        db[vin] = new_car.model_dump()
+        return db[vin]
+    return None
+
+
+def create_car(db, car: Car):
+    if car.vin in db:
+        return None
+    db[car.vin] = car.model_dump()
+    return db[car.vin]
+
+
+def delete_car(db, car: Car):
+    if car.vin in db:
+        del db[car.vin]
+        return car.vin
+    return None
+
+
+def get_drivers_with_vehicles(username: str = None):
+    if username is None:
+        return {"drivers": fake_drivers_db, "vehicles": fake_cars_db, "driver_car": fake_driver_car}
+    else:
+        drivers: dict = dict()
+        for key, value in fake_drivers_db.items():
+            if username == value.get("director"):
+                drivers[key] = value
+        vehicles: dict = dict()
+        for key, value in fake_cars_db.items():
+            if username == value.get("owner"):
+                vehicles[key] = value
+        # TODO: недописано!!!
+        driver_car: dict = dict()
+        for key, value in fake_driver_car.items():
+            if username == value.get("driver_id"):
+                vehicles[key] = value
+        return {"drivers": drivers, "vehicles": vehicles}
 
 
 def authenticate_user(fake_db, username: str, password: str):
@@ -220,7 +457,7 @@ async def predict(input_parameters: dict) -> dict:
         return {}
 
 
-@app.post("/inference_instance")
+@app.post(path="/inference_instance")
 async def inference_instance(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
     """
     Выполнение единичного предсказания.
@@ -237,7 +474,7 @@ async def inference_instance(request: Request, current_user: Annotated[User, Dep
         return JSONResponse(content={}, status_code=400)
 
 
-@app.websocket("/tracking")
+@app.websocket(path="/tracking")
 async def tracking(websocket: WebSocket):
     """
     Принимает данные
@@ -264,7 +501,7 @@ async def tracking(websocket: WebSocket):
         connected_clients.remove(websocket)
 
 
-@app.post("/auth/signUp")
+@app.post(path="/auth/signUp")
 async def sign_up(request: Request):
     try:
         object_form = await request.json()
@@ -284,7 +521,7 @@ async def sign_up(request: Request):
         return JSONResponse(content={}, status_code=400)
 
 
-@app.post("/auth/signIn")
+@app.post(path="/auth/signIn")
 async def sign_in(request: Request, response: Response):
     try:
         object_form = await request.json()
@@ -328,8 +565,7 @@ async def update_user_route(request: Request, current_user: Annotated[UserInDB, 
             user_in_db["hashed_password"] = hash_password
         del user_in_db["password"]
         del user_in_db["confirmPassword"]
-        update_result = update_user(db=fake_users_db, current_user=current_user, update_user=UserInDB(**user_in_db))
-        print(update_result)
+        update_result = update_user(db=fake_users_db, current_user=current_user, new_user=UserInDB(**user_in_db))
         if update_result is None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -372,15 +608,15 @@ async def login_for_access_token(username: str, password: str) -> Token:
     return Token(access_token=access_token)  # , token_type="bearer"
 
 
-@app.get("/users/me")
+@app.get(path="/users/me")
 async def read_users(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
 
-@app.get("/cars/me")
+@app.get(path="/cars/me")
 async def read_cars_me(current_user: Annotated[User, Depends(get_current_user)]):
     return get_cars(db=fake_cars_db, username=current_user.username)
 
-@app.get("/cars/all")
+@app.get(path="/cars/all")
 async def read_cars_all(current_user: Annotated[User, Depends(get_current_user)]):
     try:
         if current_user.role == "admin":
@@ -392,6 +628,72 @@ async def read_cars_all(current_user: Annotated[User, Depends(get_current_user)]
     except HTTPException as http_exc:
         print(f'Ошибка в gateway, связанная с правами доступа:\n{http_exc}')
         return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_403_FORBIDDEN)
+
+@app.put(path="/update/car")
+async def update_car_route(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        object_form: dict = await request.json()
+        update_result = update_car(db=fake_cars_db, vin=object_form.get("vin"), new_car=Car(**object_form))
+        if update_result is not None:
+            return {"message": "Данные успешно обновлены."}
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Автомобиля с таким VIN-номером нет в базе.",
+        )
+    except HTTPException as http_exc:
+        print(f'Ошибка в gateway, связанная с обновлением данных об автомобиле:\n{http_exc}')
+        return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)
+
+@app.post(path="/add/car")
+async def add_car_route(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        object_form: dict = await request.json()
+        created_car = create_car(db=fake_cars_db, car=Car(**object_form))
+        if created_car is not None:
+            return JSONResponse(content={"message": "Автомобиль успешно зарегистрирован."}, status_code=201)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Автомобиль с таким VIN-номером уже зарегистрирован.",
+        )
+    except HTTPException as http_exc:
+        print(f'Ошибка в gateway, связанная с регистрацией автомобиля:\n{http_exc}')
+        return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={}, status_code=400)
+
+@app.delete(path="/delete/car")
+async def delete_car_route(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        object_form: dict = await request.json()
+        deletion_result = delete_car(db=fake_cars_db, car=Car(**object_form))
+        if deletion_result is not None:
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Автомобиля с такими данными не существует.",
+        )
+    except HTTPException as http_exc:
+        print(f'Ошибка в gateway, связанная с удалением автомобиля:\n{http_exc}')
+        return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
+
+@app.get(path="/drivers-with-vehicles")
+async def get_information_about_drivers_and_vehicles(current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        if current_user.role == "admin":
+            drivers_and_vehicles = get_drivers_with_vehicles()
+        else:
+            drivers_and_vehicles = get_drivers_with_vehicles(username=current_user.username)
+        return  drivers_and_vehicles
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_403_FORBIDDEN)

@@ -40,7 +40,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode; 
                   <li className="nav-item">
                     <a href="/garage" className="nav-link d-flex align-items-center">
                       <i className="me-1 bi bi-car-front fs-3"/>
-                      Гараж
+                      { user["role"] === "admin" ? "Автопарк" : "Гараж"}
                     </a>
                   </li>
                   <li className="nav-item">

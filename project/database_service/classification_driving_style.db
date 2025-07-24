@@ -1,0 +1,42 @@
+CREATE TABLE users (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+username TEXT NOT NULL UNIQUE,
+full_name TEXT NULL DEFAULT NULL,
+hashed_password TEXT NOT NULL,
+role TEXT CHECK( pType IN ('user','admin') ) NOT NULL DEFAULT 'user',
+phone TEXT NULL DEFAULT NULL,
+address TEXT NULL DEFAULT NULL
+);
+
+CREATE TABLE cars (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+vin TEXT NOT NULL UNIQUE,
+owner TEXT NOT NULL,
+brand TEXT NOT NULL,
+model TEXT NOT NULL,
+year INTEGER NOT NULL CHECK( year <= CAST( strftime('%Y', date('now')) as INTEGER ) ),
+licensePlate TEXT NULL DEFAULT NULL,
+mileage INTEGER NOT NULL CHECK(mileage >= 0)
+);
+
+CREATE TABLE drivers (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+director TEXT NOT NULL,
+license_number TEXT NOT NULL UNIQUE,
+expiry_date TEXT NOT NULL,
+full_name TEXT NOT NULL,
+phone TEXT NOT NULL,
+email TEXT NOT NULL,
+driving_experience INTEGER NOT NULL CHECK(driving_experience >= 0),
+issue_date TEXT NOT NULL CHECK(issue_date <= date('now')),
+driving_rating REAL NOT NULL DEFAULT 5,
+insurance_expiry_date TEXT NOT NULL
+);
+
+CREATE TABLE driver_car (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+driver_id INTEGER NOT NULL,
+car_id INTEGER NOT NULL,
+start_date TEXT NOT NULL CHECK(start_date <= end_date),
+end_date TEXT NOT NULL
+);

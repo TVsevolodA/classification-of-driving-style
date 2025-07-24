@@ -3,7 +3,6 @@ import Hls from 'hls.js';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import "./page.css";
-// import RouteMap from '../../../components/RouteMap';
 
 export default function IndividualStreamPage() {
     // Моковые данные для детального просмотра водителя
