@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
 
-function getDescriptionDivingStyle(rating: number) {
-    if ( rating <= 3.3 ) return "aggressive";
-    else if ( rating > 3.3 && rating <= 6.6 ) return "vague";
-    else return "normal";
-}
+// function getDescriptionDivingStyle(rating: number) {
+//     if ( rating <= 3.3 ) return "aggressive";
+//     else if ( rating > 3.3 && rating <= 6.6 ) return "vague";
+//     else return "normal";
+// }
 
-export default function MainStreamPage({ drivers, vehicles }: { drivers: DriverType[]; vehicles: VehiclesType[]; }) {
+// { drivers, vehicles }: { drivers: DriverType[]; vehicles: VehiclesType[]; }
+export default function MainStreamPage() {
     // Типы стилей вождения
     const drivingStyles = {
         normal: { label: "Безопасный", color: "success", textColor: "text-success", bgColor: "bg-success-subtle" },
@@ -18,92 +19,92 @@ export default function MainStreamPage({ drivers, vehicles }: { drivers: DriverT
     };
 
     // Моковые данные водителей
-    // const drivers = [
-    // {
-    //     id: 1,
-    //     name: "Алексей Петров",
-    //     avatar: "/placeholder.svg?height=40&width=40",
-    //     vehicle: "Toyota Camry",
-    //     plateNumber: "А123БВ77",
-    //     style: "safe",
-    //     speed: 65,
-    //     location: "Москва, Тверская ул.",
-    //     lastUpdate: "2 мин назад",
-    //     score: 95,
-    //     violations: 0,
-    //     isOnline: true,
-    // },
-    // {
-    //     id: 2,
-    //     name: "Мария Сидорова",
-    //     avatar: "/placeholder.svg?height=40&width=40",
-    //     vehicle: "Honda Civic",
-    //     plateNumber: "В456ГД77",
-    //     style: "aggressive",
-    //     speed: 85,
-    //     location: "Москва, Садовое кольцо",
-    //     lastUpdate: "1 мин назад",
-    //     score: 72,
-    //     violations: 3,
-    //     isOnline: true,
-    // },
-    // {
-    //     id: 3,
-    //     name: "Дмитрий Козлов",
-    //     avatar: "/placeholder.svg?height=40&width=40",
-    //     vehicle: "Volkswagen Polo",
-    //     plateNumber: "С789ЕЖ77",
-    //     style: "economical",
-    //     speed: 55,
-    //     location: "Москва, Ленинский пр-т",
-    //     lastUpdate: "30 сек назад",
-    //     score: 88,
-    //     violations: 1,
-    //     isOnline: true,
-    // },
-    // {
-    //     id: 4,
-    //     name: "Елена Волкова",
-    //     avatar: "/placeholder.svg?height=40&width=40",
-    //     vehicle: "Nissan Qashqai",
-    //     plateNumber: "Д012ЗИ77",
-    //     style: "moderate",
-    //     speed: 70,
-    //     location: "Москва, МКАД",
-    //     lastUpdate: "5 мин назад",
-    //     score: 81,
-    //     violations: 2,
-    //     isOnline: false,
-    // },
-    // {
-    //     id: 5,
-    //     name: "Игорь Смирнов",
-    //     avatar: "/placeholder.svg?height=40&width=40",
-    //     vehicle: "BMW X5",
-    //     plateNumber: "Е345КЛ77",
-    //     style: "risky",
-    //     speed: 95,
-    //     location: "Москва, Кутузовский пр-т",
-    //     lastUpdate: "1 мин назад",
-    //     score: 65,
-    //     violations: 5,
-    //     isOnline: true,
-    // },
-    // {
-    //     id: 6,
-    //     name: "Анна Федорова",
-    //     avatar: "/placeholder.svg?height=40&width=40",
-    //     vehicle: "Hyundai Solaris",
-    //     plateNumber: "Ж678МН77",
-    //     style: "safe",
-    //     speed: 60,
-    //     location: "Москва, Арбат",
-    //     lastUpdate: "3 мин назад",
-    //     score: 92,
-    //     violations: 0,
-    //     isOnline: true,
-    // },
-    // ]
+    const drivers = [
+    {
+        id: 1,
+        name: "Алексей Петров",
+        avatar: "/placeholder.svg?height=40&width=40",
+        vehicle: "Toyota Camry",
+        plateNumber: "А123БВ77",
+        style: "safe",
+        speed: 65,
+        location: "Москва, Тверская ул.",
+        lastUpdate: "2 мин назад",
+        score: 95,
+        violations: 0,
+        isOnline: true,
+    },
+    {
+        id: 2,
+        name: "Мария Сидорова",
+        avatar: "/placeholder.svg?height=40&width=40",
+        vehicle: "Honda Civic",
+        plateNumber: "В456ГД77",
+        style: "aggressive",
+        speed: 85,
+        location: "Москва, Садовое кольцо",
+        lastUpdate: "1 мин назад",
+        score: 72,
+        violations: 3,
+        isOnline: true,
+    },
+    {
+        id: 3,
+        name: "Дмитрий Козлов",
+        avatar: "/placeholder.svg?height=40&width=40",
+        vehicle: "Volkswagen Polo",
+        plateNumber: "С789ЕЖ77",
+        style: "economical",
+        speed: 55,
+        location: "Москва, Ленинский пр-т",
+        lastUpdate: "30 сек назад",
+        score: 88,
+        violations: 1,
+        isOnline: true,
+    },
+    {
+        id: 4,
+        name: "Елена Волкова",
+        avatar: "/placeholder.svg?height=40&width=40",
+        vehicle: "Nissan Qashqai",
+        plateNumber: "Д012ЗИ77",
+        style: "moderate",
+        speed: 70,
+        location: "Москва, МКАД",
+        lastUpdate: "5 мин назад",
+        score: 81,
+        violations: 2,
+        isOnline: false,
+    },
+    {
+        id: 5,
+        name: "Игорь Смирнов",
+        avatar: "/placeholder.svg?height=40&width=40",
+        vehicle: "BMW X5",
+        plateNumber: "Е345КЛ77",
+        style: "risky",
+        speed: 95,
+        location: "Москва, Кутузовский пр-т",
+        lastUpdate: "1 мин назад",
+        score: 65,
+        violations: 5,
+        isOnline: true,
+    },
+    {
+        id: 6,
+        name: "Анна Федорова",
+        avatar: "/placeholder.svg?height=40&width=40",
+        vehicle: "Hyundai Solaris",
+        plateNumber: "Ж678МН77",
+        style: "safe",
+        speed: 60,
+        location: "Москва, Арбат",
+        lastUpdate: "3 мин назад",
+        score: 92,
+        violations: 0,
+        isOnline: true,
+    },
+    ]
 
     const [searchTerm, setSearchTerm] = useState("");
     const [styleFilter, setStyleFilter] = useState("all");
@@ -111,20 +112,20 @@ export default function MainStreamPage({ drivers, vehicles }: { drivers: DriverT
 
     const filteredDrivers = drivers.filter((driver) => {
         const matchesSearch =
-        driver.full_name.toLowerCase().includes(searchTerm.toLowerCase()); //||
-        // driver.plateNumber.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesStyle = styleFilter === "all" || getDescriptionDivingStyle(driver.driving_rating) === styleFilter;
-        // const matchesStatus =
-        // statusFilter === "all" ||
-        // (statusFilter === "online" && driver.isOnline) ||
-        // (statusFilter === "offline" && !driver.isOnline)
+        driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        driver.plateNumber.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStyle = styleFilter === "all" || driver.style === styleFilter;
+        const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "online" && driver.isOnline) ||
+        (statusFilter === "offline" && !driver.isOnline)
 
-        return matchesSearch && matchesStyle;// && matchesStatus
+        return matchesSearch && matchesStyle && matchesStatus;
     });
 
-    // const onlineDrivers = drivers.filter((d) => d.isOnline).length
-    const avgScore = Math.round(drivers.reduce((sum, d) => sum + d.driving_rating, 0) / drivers.length)
-    // const totalViolations = drivers.reduce((sum, d) => sum + d.violations, 0)
+    const onlineDrivers = drivers.filter((d) => d.isOnline).length
+    const avgScore = Math.round(drivers.reduce((sum, d) => sum + d.score, 0) / drivers.length)
+    const totalViolations = drivers.reduce((sum, d) => sum + d.violations, 0)
 
     return (
     <div className="min-vh-100 bg-light p-4">
@@ -259,11 +260,11 @@ export default function MainStreamPage({ drivers, vehicles }: { drivers: DriverT
             <div className="row g-4">
             {filteredDrivers.map((driver) => {
                 const style = drivingStyles[
-                    getDescriptionDivingStyle(driver.driving_rating) as keyof typeof drivingStyles
+                    driver.style as keyof typeof drivingStyles
                 ];
 
                 return (
-                <div key={driver.license_number} className="col-lg-6">
+                <div key={driver.plateNumber} className="col-lg-6">
                     <div className="card h-100 shadow-sm">
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-start mb-3">
@@ -284,7 +285,7 @@ export default function MainStreamPage({ drivers, vehicles }: { drivers: DriverT
                                     ></span>
                                     </div> */}
                                     <div>
-                                        <h6 className="card-title mb-1">{driver.full_name}</h6>
+                                        <h6 className="card-title mb-1">{driver.name}</h6>
                                         <p className="card-text text-muted small mb-0">{driver.vehicle}</p>
                                         <p className="card-text text-muted small">{driver.plateNumber}</p>
                                     </div>

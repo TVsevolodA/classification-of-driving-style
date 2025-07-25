@@ -11,7 +11,7 @@ services:
     container_name: database_service
     build: "./project/database_service"
     ports:
-      - 5432:5432
+      - 5430:5430
 
   device_emulator:
     image: device_emulator

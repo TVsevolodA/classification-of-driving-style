@@ -318,6 +318,9 @@ def delete_user(db, user: User):
 
 
 def get_user(db, username: str):
+    url = "http://localhost:5430/user/read"
+    res = requests.get(url, data=username)
+    print(res)
     if username in db:
         user_dict = db[username]
         return UserInDB(**user_dict)
@@ -583,6 +586,10 @@ async def update_user_route(request: Request, current_user: Annotated[UserInDB, 
 @app.delete(path="/delete/user")
 async def delete_user_route(response: Response, current_user: Annotated[User, Depends(get_current_user)]):
     try:
+        # url = "http://database_service:5430/user/delete"
+        # requests.delete(url, data=current_user.model_dump())
+        # response.delete_cookie(key="token")
+        # return Response(status_code=status.HTTP_204_NO_CONTENT)
         response.delete_cookie(key="token")
         deletion_result = delete_user(db=fake_users_db, user=current_user)
         if deletion_result == current_user.username:

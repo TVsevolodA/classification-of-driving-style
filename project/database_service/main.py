@@ -1,4 +1,21 @@
-import sqlite3
+# from sqlalchemy import create_engine
+from fastapi import FastAPI
+# from sqlalchemy.orm import sessionmaker
+# from create_database import create_database
+from create_session import CreateSession
+from routes.user_routes import user_router
 
-connect = sqlite3.connect("classification_driving_style.db")
-cursor = connect.cursor()
+
+
+CreateSession()
+
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
+
+
+app = FastAPI()
+app.include_router(router=user_router, prefix="/user")
