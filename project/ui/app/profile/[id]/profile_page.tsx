@@ -54,7 +54,7 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
     const closeModal = () => setIsOpen(!isOpen);
     return (
     <div className="min-vh-100" id="mainBlock" style={{ background: "linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%)" }}>
-        <EditProfileForm isOpen={isOpen} onClose={closeModal} userData={userData} />
+        {isOpen ? <EditProfileForm isOpen={isOpen} onClose={closeModal} userData={userData} /> : <></>}
 
         <div className="container py-4">
             {/* Header */}
@@ -114,8 +114,8 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
                 
                 <button
                 onClick={closeModal}
-                data-bs-toggle="modal"
-                data-bs-target="#editProfileModal"
+                // data-bs-toggle="modal"
+                // data-bs-target="#editProfileModal"
                 className="btn btn-primary btn-lg d-flex align-items-center justify-content-center gap-2 mx-auto px-4"
                 >
                     <i className="bi bi-pencil-square"></i>

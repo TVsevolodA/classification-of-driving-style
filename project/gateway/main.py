@@ -19,6 +19,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+NODE_ADDRESS =  "http://localhost:5430"
+
 fake_users_db = {
     "johndoe@example.com": {
         "username": "johndoe@example.com",
@@ -269,38 +271,39 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-
-def create_user(db, user: User, password: str):
-    if not user.username in db:
-        user_password_hash = get_password_hash(password=password)
-        db[user.username] = {
-            "username": user.username,
-            "full_name": user.full_name,
-            "hashed_password": user_password_hash,
-            "role": "user",
-        }
-        return get_user(db, user.username)
+# Checked
+def create_user(user: User, password: str):
+    url = NODE_ADDRESS + "/user/create"
+    user_password_hash = get_password_hash(password=password)
+    user_dict = user.model_dump()
+    user_dict["role"] = user_dict.get("role").value
+    user_dict["hashed_password"] = user_password_hash
+    res = requests.post(url, json=user_dict)
+    if res.status_code == status.HTTP_201_CREATED:
+        return get_user(user.username)
     return None
 
 
-def update_user(db, current_user: UserInDB, new_user: UserInDB):
-    if  ( current_user.username != new_user.username
-          and not new_user.username in db )\
-        or ( current_user.username == new_user.username ):
-        if current_user.username != new_user.username:
-            # Если пользователь изменил почту, то необходимо обновить данные в зависимых таблицах
-            for key, value in fake_cars_db:
-                if value.get("owner") == current_user.username:
-                    fake_cars_db[key]["owner"] = current_user.username
-            for key, value in fake_drivers_db:
-                if value.get("director") == current_user.username:
-                    fake_cars_db[key]["director"] = current_user.username
-        current_role = db[current_user.username].get("role")
-        del db[current_user.username]
-        db[new_user.username] = new_user.model_dump()
-        db[new_user.username]["role"] = current_role
-        return db[new_user.username]
-    return None
+def update_user(replaceable_fields: dict):
+    # TODO: переписать!
+    pass
+    # if  ( current_user.username != new_user.username
+    #       and not new_user.username in db )\
+    #     or ( current_user.username == new_user.username ):
+    #     if current_user.username != new_user.username:
+    #         # Если пользователь изменил почту, то необходимо обновить данные в зависимых таблицах
+    #         for key, value in fake_cars_db:
+    #             if value.get("owner") == current_user.username:
+    #                 fake_cars_db[key]["owner"] = current_user.username
+    #         for key, value in fake_drivers_db:
+    #             if value.get("director") == current_user.username:
+    #                 fake_cars_db[key]["director"] = current_user.username
+    #     current_role = db[current_user.username].get("role")
+    #     del db[current_user.username]
+    #     db[new_user.username] = new_user.model_dump()
+    #     db[new_user.username]["role"] = current_role
+    #     return db[new_user.username]
+    # return None
 
 
 def delete_user(db, user: User):
@@ -317,13 +320,13 @@ def delete_user(db, user: User):
     return None
 
 
-def get_user(db, username: str):
-    url = "http://localhost:5430/user/read"
-    res = requests.get(url, data=username)
-    print(res)
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
+# Checked
+def get_user(username: str) -> UserInDB | None:
+    url = NODE_ADDRESS + "/user/read"
+    res = requests.get(url, params={"username": username})
+    if res.status_code == status.HTTP_200_OK:
+        user = res.json()
+        return UserInDB(**user)
     return None
 
 
@@ -378,8 +381,8 @@ def get_drivers_with_vehicles(username: str = None):
         return {"drivers": drivers, "vehicles": vehicles}
 
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(username: str, password: str):
+    user: UserInDB = get_user(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -429,7 +432,7 @@ async def get_current_user(token: Annotated[str, Depends(get_token_from_cookies)
         token_data = TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
+    user: UserInDB = get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -461,7 +464,7 @@ async def predict(input_parameters: dict) -> dict:
 
 
 @app.post(path="/inference_instance")
-async def inference_instance(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+async def inference_instance(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     """
     Выполнение единичного предсказания.
     :param current_user:
@@ -503,7 +506,7 @@ async def tracking(websocket: WebSocket):
         print(f"Произошла ошибка связи с клиентом.\nСоединение разорвано.\n{e}")
         connected_clients.remove(websocket)
 
-
+# Checked
 @app.post(path="/auth/signUp")
 async def sign_up(request: Request):
     try:
@@ -512,7 +515,7 @@ async def sign_up(request: Request):
             username=object_form["username"],
             full_name=object_form["full_name"],
         )
-        created_user = create_user(db=fake_users_db, user=new_user, password=object_form["password"])
+        created_user = create_user(user=new_user, password=object_form["password"])
         if created_user is not None:
             return JSONResponse(content={"message": "Пользователь успешно зарегистрирован."}, status_code=201)
         raise HTTPException(
@@ -523,12 +526,12 @@ async def sign_up(request: Request):
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={}, status_code=400)
 
-
+# Checked
 @app.post(path="/auth/signIn")
 async def sign_in(request: Request, response: Response):
     try:
         object_form = await request.json()
-        token = await login_for_access_token(
+        token = login_for_access_token(
             username=object_form["username"],
             password=object_form["password"]
         )
@@ -560,15 +563,20 @@ async def logout(response: Response):
 async def update_user_route(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
         object_form: dict = await request.json()
-        user_in_db = object_form.copy()
-        if object_form.get("password") == "":
-            user_in_db["hashed_password"] = current_user.hashed_password
-        else:
-            hash_password = get_password_hash( password=object_form.get("password") )
-            user_in_db["hashed_password"] = hash_password
-        del user_in_db["password"]
-        del user_in_db["confirmPassword"]
-        update_result = update_user(db=fake_users_db, current_user=current_user, new_user=UserInDB(**user_in_db))
+        user_in_db: dict = object_form.copy()
+        # if object_form.get("password") == "":
+        #     user_in_db["hashed_password"] = current_user.hashed_password
+        # else:
+        # if object_form.get("password") != "":
+        #     hash_password = get_password_hash( password=object_form.get("password") )
+        #     user_in_db["hashed_password"] = hash_password
+        # del user_in_db["password"]
+        # del user_in_db["confirmPassword"]
+        print(user_in_db)
+        if user_in_db.get("password") is not None:
+            hash_password = get_password_hash(password=user_in_db.get("password"))
+            user_in_db["hash_password"] = hash_password
+        update_result = update_user(replaceable_fields=user_in_db)
         if update_result is None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -584,7 +592,7 @@ async def update_user_route(request: Request, current_user: Annotated[UserInDB, 
 
 
 @app.delete(path="/delete/user")
-async def delete_user_route(response: Response, current_user: Annotated[User, Depends(get_current_user)]):
+async def delete_user_route(response: Response, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
         # url = "http://database_service:5430/user/delete"
         # requests.delete(url, data=current_user.model_dump())
@@ -600,8 +608,8 @@ async def delete_user_route(response: Response, current_user: Annotated[User, De
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
 
 
-async def login_for_access_token(username: str, password: str) -> Token:
-    user = authenticate_user(fake_users_db, username, password)
+def login_for_access_token(username: str, password: str) -> Token:
+    user = authenticate_user(username, password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -616,17 +624,17 @@ async def login_for_access_token(username: str, password: str) -> Token:
 
 
 @app.get(path="/users/me")
-async def read_users(current_user: Annotated[User, Depends(get_current_user)]):
+async def read_users(current_user: Annotated[UserInDB, Depends(get_current_user)]):
     return current_user
 
 @app.get(path="/cars/me")
-async def read_cars_me(current_user: Annotated[User, Depends(get_current_user)]):
+async def read_cars_me(current_user: Annotated[UserInDB, Depends(get_current_user)]):
     return get_cars(db=fake_cars_db, username=current_user.username)
 
 @app.get(path="/cars/all")
-async def read_cars_all(current_user: Annotated[User, Depends(get_current_user)]):
+async def read_cars_all(current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
-        if current_user.role == "admin":
+        if current_user.role == Roles.admin:
             return get_cars(db=fake_cars_db)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -640,7 +648,7 @@ async def read_cars_all(current_user: Annotated[User, Depends(get_current_user)]
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_403_FORBIDDEN)
 
 @app.put(path="/update/car")
-async def update_car_route(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+async def update_car_route(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
         object_form: dict = await request.json()
         update_result = update_car(db=fake_cars_db, vin=object_form.get("vin"), new_car=Car(**object_form))
@@ -658,7 +666,7 @@ async def update_car_route(request: Request, current_user: Annotated[User, Depen
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)
 
 @app.post(path="/add/car")
-async def add_car_route(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+async def add_car_route(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
         object_form: dict = await request.json()
         created_car = create_car(db=fake_cars_db, car=Car(**object_form))
@@ -676,7 +684,7 @@ async def add_car_route(request: Request, current_user: Annotated[User, Depends(
         return JSONResponse(content={}, status_code=400)
 
 @app.delete(path="/delete/car")
-async def delete_car_route(request: Request, current_user: Annotated[User, Depends(get_current_user)]):
+async def delete_car_route(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
         object_form: dict = await request.json()
         deletion_result = delete_car(db=fake_cars_db, car=Car(**object_form))
@@ -694,9 +702,9 @@ async def delete_car_route(request: Request, current_user: Annotated[User, Depen
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
 
 @app.get(path="/drivers-with-vehicles")
-async def get_information_about_drivers_and_vehicles(current_user: Annotated[User, Depends(get_current_user)]):
+async def get_information_about_drivers_and_vehicles(current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
-        if current_user.role == "admin":
+        if current_user.role == Roles.admin:
             drivers_and_vehicles = get_drivers_with_vehicles()
         else:
             drivers_and_vehicles = get_drivers_with_vehicles(username=current_user.username)

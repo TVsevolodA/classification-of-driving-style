@@ -1,25 +1,16 @@
+from typing import Generator
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-
-from create_database import create_database
+from sqlalchemy.orm import sessionmaker
 
 
 class CreateSession:
-    session_local  = None
-    def __init__(self):
-        create_database()
+
+    @staticmethod
+    def get_db() -> Generator:
         SQLALCHEMY_DATABASE_URL = "sqlite:///./classification_driving_style.db"
         engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
         session_local = sessionmaker(autoflush=False, bind=engine)
-        CreateSession.set_db(session_local)
-
-    @classmethod
-    def set_db(cls, s):
-        cls.session_local = s
-
-    @classmethod
-    def get_db(cls):
-        db = cls.session_local()
+        db = session_local()
         try:
             yield db
         finally:

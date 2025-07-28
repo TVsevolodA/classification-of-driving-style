@@ -5,10 +5,10 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { useUser } from "./user_context";
 
 export default function ClientLayout({ children }: { children: React.ReactNode; }) {
+  const user = useUser();
   useEffect(() => {
     import("bootstrap/dist/js/bootstrap.js");
   }, []);
-  const user = useUser();
   return (
   <body>
       <nav className="navbar navbar-expand-lg bg-body-tertiary">

@@ -8,20 +8,20 @@ import "./modal_window_edit_profile.css";
 
 export default function EditProfileForm({ isOpen, onClose, userData }) {
     const router = useRouter();
-
     const [formData, setFormData] = useState({
-        ...{ password: "", confirmPassword: "", },
+        ...{ password: "", confirmPassword: "" },
         ...userData,
     });
 
     useEffect(() => {
         setFormData({
-            ...{ password: "", confirmPassword: "", },
+            ...{ password: "", confirmPassword: "" },
             ...userData,
         });
     }, [isOpen]);
 
     const onChange = (e) => {
+        setErrors({})
         const { name, value } = e.target;
         setFormData({
             ...formData,
@@ -44,19 +44,53 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
     }
 
     function formDataToMap(formData) {
-        const map = new Map();
+        const map = new Object();
         for (const [key, value] of formData.entries()) {
-            map[key] = value;
+            if ( value !== userData[key] ) {
+                map[key] = value;
+            }
         }
         return map;
+    }
+
+    const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({})
+    const validate = () => {
+        const newErrors: typeof errors = {}
+
+        if (!formData.password && !formData.confirmPassword) {
+            return newErrors;
+        }
+        if (!formData.password) {
+            newErrors.password = "Введите новый пароль или оставьте оба поля пустыми";
+        }
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = "Подтвердите пароль";
+        }
+        if (formData.password && formData.confirmPassword
+            && formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = "Пароли не совпадают";
+        }
+        return newErrors;
     }
 
     async function onSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const url = 'http://localhost:7000/update/user';
-        let fd = new FormData(event.currentTarget);
-        const data = formDataToMap(fd);
-        console.log(JSON.stringify(data));
+        const fd = new FormData(event.currentTarget);
+        let data: Object = formDataToMap(fd);
+        if ( data["password"] === "" ) {
+            delete data["password"];
+        }
+        delete data["confirmPassword"];
+        data["id"] = userData["id"];
+
+        const validationErrors = validate();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+
         const updateUserResult = await requestsToTheServer(url, 'PUT', JSON.stringify(data));
         const alertBlock = document.createElement("div");
         let message = "";
@@ -87,11 +121,12 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
         const mainBlock = document.getElementById("mainBlock");
         mainBlock.prepend(alertBlock);
         router.refresh();
+        onClose();
     }
 
     return (
-    <div
-            className="modal fade"
+    <div style={{ display: "block" }}
+            className="modal show"
             id="editProfileModal"
             tabIndex={-1}
             aria-labelledby="editProfileModalLabel"
@@ -99,7 +134,7 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
             >
                 <div className="modal-dialog modal-dialog-centered">
                     <div className="modal-content">
-                        <form onSubmit={onSubmit} autoComplete="on">
+                        <form onSubmit={onSubmit} autoComplete="on" noValidate>
                             <div className="modal-header">
                                 <h1 className="modal-title fs-5" id="editProfileModalLabel">
                                     <i className="bi bi-person-circle me-2"></i>
@@ -107,9 +142,10 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                                 </h1>
                                 <button
                                 type="button"
+                                // data-bs-dismiss="modal"
                                 onClick={onClose}
-                                className="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"
-                                ></button>
+                                className="btn-close" aria-label="Закрыть"
+                                />
                             </div>
 
                             <div className="modal-body">
@@ -218,7 +254,7 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                                         <div className="input-group">
                                             <input
                                             type="password"
-                                            className="form-control"
+                                            className={`form-control ${errors.password ? "is-invalid" : ""}`}
                                             id="userPassword"
                                             name="password"
                                             placeholder="Введите новый пароль"
@@ -242,6 +278,7 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                                             <i className="bi bi-eye"></i>
                                             </button>
                                         </div>
+                                        {errors.password && <div className="invalid-feedback">{errors.password}</div>}
                                         <div className="form-text">Оставьте пустым, если не хотите менять пароль</div>
                                     </div>
 
@@ -253,21 +290,25 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                                         </label>
                                         <input
                                             type="password"
-                                            className="form-control"
+                                            className={`form-control ${errors.confirmPassword ? "is-invalid" : ""}`}
                                             id="confirmPassword"
                                             name="confirmPassword"
                                             placeholder="Подтвердите новый пароль"
                                             onChange={onChange}
+                                            required={!!formData.password}
                                         />
+                                        {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
                                     </div>
                             </div>
 
                             <div className="modal-footer">
-                                <button type="button" onClick={onClose} className="btn btn-secondary" data-bs-dismiss="modal">
+                                <button type="button" onClick={onClose} className="btn btn-secondary">
+                                    {/* data-bs-dismiss="modal" */}
                                     <i className="bi bi-x-circle me-2"></i>
                                     Отмена
                                 </button>
-                                <button type="submit" className="btn btn-success" data-bs-dismiss="modal">
+                                <button type="submit" className="btn btn-success">
+                                    {/*  data-bs-dismiss="modal" */}
                                     <i className="bi bi-check-circle me-2"></i>
                                     Сохранить изменения
                                 </button>
