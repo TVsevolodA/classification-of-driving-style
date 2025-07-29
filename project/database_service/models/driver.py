@@ -8,7 +8,7 @@ class Driver(Base):
     __tablename__ = "drivers"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    director = Column(String, nullable=False)
+    director_id = Column(Integer, nullable=False)
     license_number = Column(String, nullable=False, unique=True)
     expiration_driver_license = Column(Date, nullable=True)
     insurance_expiry_date = Column(Date, nullable=True)

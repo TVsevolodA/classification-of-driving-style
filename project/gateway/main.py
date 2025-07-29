@@ -272,7 +272,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 # Checked
-def create_user(user: User, password: str):
+def create_user(user: User, password: str) -> UserInDB | None:
     url = NODE_ADDRESS + "/user/create"
     user_password_hash = get_password_hash(password=password)
     user_dict = user.model_dump()
@@ -283,61 +283,52 @@ def create_user(user: User, password: str):
         return get_user(user.username)
     return None
 
+# Checked
+def update_user(replaceable_fields: dict) -> UserInDB | None:
+    url = NODE_ADDRESS + "/user/update"
+    res = requests.put(url, json=replaceable_fields)
+    if res.status_code == status.HTTP_200_OK:
+        return get_user(user_id=replaceable_fields.get("id"))
+    return None
 
-def update_user(replaceable_fields: dict):
-    # TODO: переписать!
-    pass
-    # if  ( current_user.username != new_user.username
-    #       and not new_user.username in db )\
-    #     or ( current_user.username == new_user.username ):
-    #     if current_user.username != new_user.username:
-    #         # Если пользователь изменил почту, то необходимо обновить данные в зависимых таблицах
-    #         for key, value in fake_cars_db:
-    #             if value.get("owner") == current_user.username:
-    #                 fake_cars_db[key]["owner"] = current_user.username
-    #         for key, value in fake_drivers_db:
-    #             if value.get("director") == current_user.username:
-    #                 fake_cars_db[key]["director"] = current_user.username
-    #     current_role = db[current_user.username].get("role")
-    #     del db[current_user.username]
-    #     db[new_user.username] = new_user.model_dump()
-    #     db[new_user.username]["role"] = current_role
-    #     return db[new_user.username]
-    # return None
-
-
-def delete_user(db, user: User):
-    if user.username in db:
-        del db[user.username]
-        # Удалить данные из зависимых таблиц
-        for key, value in list(fake_cars_db.items()):
-            if value.get("owner") == user.username:
-                del fake_cars_db[key]
-        for key, value in list(fake_drivers_db.items()):
-            if value.get("director") == user.username:
-                fake_cars_db[key]["director"] = user.username
-        return user.username
+# Checked
+def delete_user(user_deleted: UserInDB) -> UserInDB | None:
+    url = NODE_ADDRESS + "/user/delete"
+    user_deleted_dict: dict = user_deleted.model_dump()
+    user_deleted_dict["role"] = user_deleted_dict.get("role").value
+    res = requests.delete(url, json=user_deleted_dict)
+    if res.status_code == status.HTTP_204_NO_CONTENT:
+        return user_deleted
     return None
 
 
 # Checked
-def get_user(username: str) -> UserInDB | None:
+USER_ID_MISSING = -1
+def get_user(username: str = "", user_id: int = USER_ID_MISSING) -> UserInDB | None:
     url = NODE_ADDRESS + "/user/read"
-    res = requests.get(url, params={"username": username})
+    if len(username) == 0 and user_id == USER_ID_MISSING:
+        return  None
+    res = requests.get(url, params={ "username": username, "user_id": user_id })
     if res.status_code == status.HTTP_200_OK:
         user = res.json()
         return UserInDB(**user)
     return None
 
 
-def get_cars(db, username: str = None):
-    if username is None:
-        return  list(db.values())
-    user_cars: list = list()
-    for key, value in db.items():
-        if value.get("owner") == username:
-            user_cars.append(value)
-    return user_cars
+def get_cars(owner_id: int) -> list[Car]:
+    url = NODE_ADDRESS + "/car/read"
+    res = requests.get(url, params={ "owner_id": owner_id })
+    if res.status_code == status.HTTP_200_OK:
+        cars: list[Car] = res.json()
+        return cars
+    return []
+    # if username is None:
+    #     return  list(db.values())
+    # user_cars: list = list()
+    # for key, value in db.items():
+    #     if value.get("owner") == username:
+    #         user_cars.append(value)
+    # return user_cars
 
 
 def update_car(db, vin: str, new_car: Car):
@@ -552,31 +543,59 @@ async def sign_in(request: Request, response: Response):
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=400)
 
-
+# Checked
 @app.get(path="/logout")
 async def logout(response: Response):
     response.delete_cookie(key="token")
     return {"message": "Успешно вышли из системы."}
 
-
+# Checked
 @app.put(path="/update/user")
-async def update_user_route(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
+async def update_user_route(
+        request: Request,
+        response: Response,
+        current_user: Annotated[UserInDB, Depends(get_current_user)]
+):
     try:
         object_form: dict = await request.json()
-        user_in_db: dict = object_form.copy()
-        # if object_form.get("password") == "":
-        #     user_in_db["hashed_password"] = current_user.hashed_password
-        # else:
-        # if object_form.get("password") != "":
-        #     hash_password = get_password_hash( password=object_form.get("password") )
-        #     user_in_db["hashed_password"] = hash_password
-        # del user_in_db["password"]
-        # del user_in_db["confirmPassword"]
-        print(user_in_db)
-        if user_in_db.get("password") is not None:
-            hash_password = get_password_hash(password=user_in_db.get("password"))
-            user_in_db["hash_password"] = hash_password
-        update_result = update_user(replaceable_fields=user_in_db)
+
+        # В случае смены пароля проверяем, что текущий совпадает с введеным
+        new_password = object_form.get("password")
+        if new_password is not None:
+
+            current_password = object_form.get("currentPassword")
+            if current_password is not None:
+                password_correct = verify_password(
+                    plain_password=current_password,
+                    hashed_password=current_user.hashed_password
+                )
+                if not password_correct:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="Текущий пароль неверный.",
+                    )
+
+            # Получаем хэш пароля и вносим поле в словарь изменений
+            hash_password = get_password_hash(password=new_password)
+            object_form["hashed_password"] = hash_password
+            del object_form["currentPassword"]
+            del object_form["password"]
+
+        # Обновляем данные пользователя
+        update_result = update_user(replaceable_fields=object_form)
+
+        # Получаем новый токен доступа и возвращаем его
+        token = login_for_access_token(username=update_result.username, password=new_password)
+        response.set_cookie(
+            key="token",
+            value=token.access_token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            path="/",
+        )
+
         if update_result is None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -591,18 +610,18 @@ async def update_user_route(request: Request, current_user: Annotated[UserInDB, 
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)
 
 
+# Checked
 @app.delete(path="/delete/user")
 async def delete_user_route(response: Response, current_user: Annotated[UserInDB, Depends(get_current_user)]):
     try:
-        # url = "http://database_service:5430/user/delete"
-        # requests.delete(url, data=current_user.model_dump())
-        # response.delete_cookie(key="token")
-        # return Response(status_code=status.HTTP_204_NO_CONTENT)
         response.delete_cookie(key="token")
-        deletion_result = delete_user(db=fake_users_db, user=current_user)
-        if deletion_result == current_user.username:
-            return Response(status_code=status.HTTP_204_NO_CONTENT)
-        return JSONResponse(content={"message": "Пользователя с такими данными не существует."}, status_code=status.HTTP_404_NOT_FOUND)
+        delete_result = delete_user(user_deleted=current_user)
+        if delete_result is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Не удалось удалить пользователя.",
+            )
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
@@ -627,9 +646,14 @@ def login_for_access_token(username: str, password: str) -> Token:
 async def read_users(current_user: Annotated[UserInDB, Depends(get_current_user)]):
     return current_user
 
+
+
+
+
+# Checked
 @app.get(path="/cars/me")
 async def read_cars_me(current_user: Annotated[UserInDB, Depends(get_current_user)]):
-    return get_cars(db=fake_cars_db, username=current_user.username)
+    return get_cars(owner_id=current_user.id)
 
 @app.get(path="/cars/all")
 async def read_cars_all(current_user: Annotated[UserInDB, Depends(get_current_user)]):

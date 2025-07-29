@@ -9,13 +9,13 @@ import "./modal_window_edit_profile.css";
 export default function EditProfileForm({ isOpen, onClose, userData }) {
     const router = useRouter();
     const [formData, setFormData] = useState({
-        ...{ password: "", confirmPassword: "" },
+        ...{ password: "", confirmPassword: "", currentPassword: "" },
         ...userData,
     });
 
     useEffect(() => {
         setFormData({
-            ...{ password: "", confirmPassword: "" },
+            ...{ password: "", confirmPassword: "", currentPassword: "" },
             ...userData,
         });
     }, [isOpen]);
@@ -53,15 +53,18 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
         return map;
     }
 
-    const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({})
+    const [errors, setErrors] = useState<{
+        password?: string;
+        confirmPassword?: string;
+        currentPassword?: string;
+    }>({});
     const validate = () => {
-        const newErrors: typeof errors = {}
-
-        if (!formData.password && !formData.confirmPassword) {
+        const newErrors: typeof errors = {};
+        if (!formData.password && !formData.confirmPassword && !formData.currentPassword) {
             return newErrors;
         }
         if (!formData.password) {
-            newErrors.password = "Введите новый пароль или оставьте оба поля пустыми";
+            newErrors.password = "Введите новый пароль или оставьте поля для паролей пустыми";
         }
         if (!formData.confirmPassword) {
             newErrors.confirmPassword = "Подтвердите пароль";
@@ -95,12 +98,16 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
         const alertBlock = document.createElement("div");
         let message = "";
         let classIcon = "";
+        let mainBlock = document.getElementById("mainBlock");
         if ( updateUserResult.ok ) {
             message = "Данные успешно обновлены.";
             classIcon = "bi-check-circle";
             alertBlock.className = "alert alert-success";
+            router.refresh();
+            onClose();
         }
         else {
+            mainBlock = document.getElementById("editProfileModal");
             if ( updateUserResult.data["error"] !== undefined ) {
                 message = updateUserResult.data["error"];
             }
@@ -118,10 +125,7 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
             '</div>',
             '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"/>',
         ].join('');
-        const mainBlock = document.getElementById("mainBlock");
         mainBlock.prepend(alertBlock);
-        router.refresh();
-        onClose();
     }
 
     return (
@@ -245,6 +249,43 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                                         </div>
                                     </div>
 
+                                    {/* Поле для старого пароля */}
+                                    <div className="mb-3">
+                                        <label htmlFor="userPassword" className="form-label">
+                                            <i className="bi bi-lock me-2"></i>
+                                            Текуший пароль
+                                        </label>
+                                        <div className="input-group">
+                                            <input
+                                            type="password"
+                                            className={`form-control ${errors.currentPassword ? "is-invalid" : ""}`}
+                                            id="userCurrentPassword"
+                                            name="currentPassword"
+                                            placeholder="Введите текущий пароль"
+                                            onChange={onChange}
+                                            />
+                                            <button
+                                            className="btn btn-outline-secondary"
+                                            type="button"
+                                            onClick={(e) => {
+                                                const input = document.getElementById("userCurrentPassword") as HTMLInputElement
+                                                const icon = e.currentTarget.querySelector("i")
+                                                if (input.type === "password") {
+                                                input.type = "text"
+                                                icon!.className = "bi bi-eye-slash"
+                                                } else {
+                                                input.type = "password"
+                                                icon!.className = "bi bi-eye"
+                                                }
+                                            }}
+                                            >
+                                                <i className="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+                                        <div className="form-text">Оставьте пустым, если не хотите менять пароль</div>
+                                    </div>
+
                                     {/* Поле для пароля */}
                                     <div className="mb-3">
                                         <label htmlFor="userPassword" className="form-label">
@@ -275,7 +316,7 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                                                 }
                                             }}
                                             >
-                                            <i className="bi bi-eye"></i>
+                                                <i className="bi bi-eye"></i>
                                             </button>
                                         </div>
                                         {errors.password && <div className="invalid-feedback">{errors.password}</div>}
@@ -288,15 +329,34 @@ export default function EditProfileForm({ isOpen, onClose, userData }) {
                                             <i className="bi bi-lock-fill me-2"></i>
                                             Подтвердите пароль
                                         </label>
-                                        <input
-                                            type="password"
-                                            className={`form-control ${errors.confirmPassword ? "is-invalid" : ""}`}
-                                            id="confirmPassword"
-                                            name="confirmPassword"
-                                            placeholder="Подтвердите новый пароль"
-                                            onChange={onChange}
-                                            required={!!formData.password}
-                                        />
+                                        <div className="input-group">
+                                            <input
+                                                type="password"
+                                                className={`form-control ${errors.confirmPassword ? "is-invalid" : ""}`}
+                                                id="confirmPassword"
+                                                name="confirmPassword"
+                                                placeholder="Подтвердите новый пароль"
+                                                onChange={onChange}
+                                                required={!!formData.password}
+                                            />
+                                            <button
+                                                className="btn btn-outline-secondary"
+                                                type="button"
+                                                onClick={(e) => {
+                                                    const input = document.getElementById("confirmPassword") as HTMLInputElement
+                                                    const icon = e.currentTarget.querySelector("i")
+                                                    if (input.type === "password") {
+                                                    input.type = "text"
+                                                    icon!.className = "bi bi-eye-slash"
+                                                    } else {
+                                                    input.type = "password"
+                                                    icon!.className = "bi bi-eye"
+                                                    }
+                                                }}
+                                            >
+                                                <i className="bi bi-eye"></i>
+                                            </button>
+                                        </div>
                                         {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
                                     </div>
                             </div>

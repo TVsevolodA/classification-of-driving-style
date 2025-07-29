@@ -1,8 +1,22 @@
 from  datetime import datetime as dt
+
+from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import validates
 
 from models.base import Base
+
+CURRENT_YEAR = dt.now().year
+
+class CarBaseSchema(BaseModel):
+    id: int
+    vin: str
+    owner_id: int
+    brand: str
+    model: str
+    year: int = CURRENT_YEAR
+    license_plate: str | None = None
+    mileage: int
 
 
 class Car(Base):
@@ -10,7 +24,7 @@ class Car(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     vin = Column(String, nullable=False, unique=True)
-    owner_id = Column(String, nullable=False)
+    owner_id = Column(Integer, nullable=False)
     brand = Column(String, nullable=False)
     model = Column(String, nullable=False)
     year = Column(Integer, nullable=False)
