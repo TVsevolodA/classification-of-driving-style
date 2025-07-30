@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
     // 1. Перечисляем охраняемые и общедоступные маршруты.
-    const protectedRoutes = ['/inference_instance', '/prediction_stream', '/profile', '/garage'];
+    const protectedRoutes = ['/inference_instance', '/prediction_stream', '/profile', '/garage', '/users'];
     const publicRoutes = ['/auth', '/'];
 
     // 2. Проверяем, является ли текущий маршрут защищенным или общедоступным.
@@ -16,9 +16,6 @@ export function middleware(request: NextRequest) {
     if (isProtectedRoute && !request.cookies.get('token')) {
         return NextResponse.redirect(new URL('/auth', request.nextUrl));
     }
-
-    // TODO: дописать доступ по уровню прав доступа!
-    // || isProtectedRoute && userData["info"]["role"] !== "admin"
     
     return NextResponse.next();
 }

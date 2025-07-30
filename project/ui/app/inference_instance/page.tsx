@@ -2,9 +2,9 @@
 import { FormEvent, useState } from "react";
 import "./page.css";
 import Modal from "./modal_result_window"
-import { VeincleLength } from "./Models/VeincleLength";
-import { AxlesNumber } from "./Models/AxlesNumber";
-import { VeincleSpeed } from "./Models/VeincleSpeed";
+import { VeincleLength } from "../../models/VeincleLength";
+import { AxlesNumber } from "../../models/AxlesNumber";
+import { VeincleSpeed } from "../../models/VeincleSpeed";
 import requestsToTheServer from "../../components/requests_to_the_server";
 
 export default function PredictPage() {

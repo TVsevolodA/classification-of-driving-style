@@ -13,6 +13,7 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
         phone: userData["phone"],
         address: userData["address"],
     };
+    // TODO: Заменить на среднее значение по водителям из database_service!
     const drivingData = {
         rating: 8.7,
         experience: 12,

@@ -1,131 +1,43 @@
 "use client";
 import { useState } from "react";
+import { Car } from "../../models/car";
+import { Driver } from "../../models/driver";
 
-// function getDescriptionDivingStyle(rating: number) {
-//     if ( rating <= 3.3 ) return "aggressive";
-//     else if ( rating > 3.3 && rating <= 6.6 ) return "vague";
-//     else return "normal";
-// }
+function getDescriptionDivingStyle(rating: number) {
+    if ( rating <= 3.3 ) return "aggressive";
+    else if ( rating > 3.3 && rating <= 6.6 ) return "vague";
+    else return "normal";
+}
 
-// { drivers, vehicles }: { drivers: DriverType[]; vehicles: VehiclesType[]; }
-export default function MainStreamPage() {
+export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; cars: Car[]; }) {
+    // TODO: Разработать модель CarDriver и передавать сюда данные
     // Типы стилей вождения
     const drivingStyles = {
         normal: { label: "Безопасный", color: "success", textColor: "text-success", bgColor: "bg-success-subtle" },
         aggressive: { label: "Агрессивный", color: "danger", textColor: "text-danger", bgColor: "bg-danger-subtle" },
-        // economical: { label: "Экономичный", color: "primary", textColor: "text-primary", bgColor: "bg-primary-subtle" },
         vague: { label: "Умеренный", color: "warning", textColor: "text-warning", bgColor: "bg-warning-subtle" },
-        // risky: { label: "Рискованный", color: "danger", textColor: "text-danger", bgColor: "bg-danger-subtle" },
     };
-
-    // Моковые данные водителей
-    const drivers = [
-    {
-        id: 1,
-        name: "Алексей Петров",
-        avatar: "/placeholder.svg?height=40&width=40",
-        vehicle: "Toyota Camry",
-        plateNumber: "А123БВ77",
-        style: "safe",
-        speed: 65,
-        location: "Москва, Тверская ул.",
-        lastUpdate: "2 мин назад",
-        score: 95,
-        violations: 0,
-        isOnline: true,
-    },
-    {
-        id: 2,
-        name: "Мария Сидорова",
-        avatar: "/placeholder.svg?height=40&width=40",
-        vehicle: "Honda Civic",
-        plateNumber: "В456ГД77",
-        style: "aggressive",
-        speed: 85,
-        location: "Москва, Садовое кольцо",
-        lastUpdate: "1 мин назад",
-        score: 72,
-        violations: 3,
-        isOnline: true,
-    },
-    {
-        id: 3,
-        name: "Дмитрий Козлов",
-        avatar: "/placeholder.svg?height=40&width=40",
-        vehicle: "Volkswagen Polo",
-        plateNumber: "С789ЕЖ77",
-        style: "economical",
-        speed: 55,
-        location: "Москва, Ленинский пр-т",
-        lastUpdate: "30 сек назад",
-        score: 88,
-        violations: 1,
-        isOnline: true,
-    },
-    {
-        id: 4,
-        name: "Елена Волкова",
-        avatar: "/placeholder.svg?height=40&width=40",
-        vehicle: "Nissan Qashqai",
-        plateNumber: "Д012ЗИ77",
-        style: "moderate",
-        speed: 70,
-        location: "Москва, МКАД",
-        lastUpdate: "5 мин назад",
-        score: 81,
-        violations: 2,
-        isOnline: false,
-    },
-    {
-        id: 5,
-        name: "Игорь Смирнов",
-        avatar: "/placeholder.svg?height=40&width=40",
-        vehicle: "BMW X5",
-        plateNumber: "Е345КЛ77",
-        style: "risky",
-        speed: 95,
-        location: "Москва, Кутузовский пр-т",
-        lastUpdate: "1 мин назад",
-        score: 65,
-        violations: 5,
-        isOnline: true,
-    },
-    {
-        id: 6,
-        name: "Анна Федорова",
-        avatar: "/placeholder.svg?height=40&width=40",
-        vehicle: "Hyundai Solaris",
-        plateNumber: "Ж678МН77",
-        style: "safe",
-        speed: 60,
-        location: "Москва, Арбат",
-        lastUpdate: "3 мин назад",
-        score: 92,
-        violations: 0,
-        isOnline: true,
-    },
-    ]
-
     const [searchTerm, setSearchTerm] = useState("");
     const [styleFilter, setStyleFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("all");
 
-    const filteredDrivers = drivers.filter((driver) => {
-        const matchesSearch =
-        driver.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        driver.plateNumber.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStyle = styleFilter === "all" || driver.style === styleFilter;
-        const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "online" && driver.isOnline) ||
-        (statusFilter === "offline" && !driver.isOnline)
+    const filteredDrivers = () => {
+        let suitableResult = [];
+        for (let iter = 0; iter < Math.min(drivers.length, cars.length); iter++) {
+            const matchesSearch =
+            drivers[iter].full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            cars[iter].license_plate.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesStyle = styleFilter === "all" || getDescriptionDivingStyle(drivers[iter].driving_rating) === styleFilter;
+            if (matchesSearch && matchesStyle) {
+                suitableResult.push( {"driver": drivers[iter], "car":cars[iter]} );
+            }
+        }
+        return suitableResult;
+    };
 
-        return matchesSearch && matchesStyle && matchesStatus;
-    });
-
-    const onlineDrivers = drivers.filter((d) => d.isOnline).length
-    const avgScore = Math.round(drivers.reduce((sum, d) => sum + d.score, 0) / drivers.length)
-    const totalViolations = drivers.reduce((sum, d) => sum + d.violations, 0)
+    const onlineDrivers = drivers.length; // TODO: Потом так и оставить!
+    const avgScore = Math.round(drivers.reduce((sum, d) => sum + d.driving_rating, 0) / drivers.length);
+    const totalViolations = drivers.reduce((sum, d) => sum + d.number_violations, 0);
 
     return (
     <div className="min-vh-100 bg-light p-4">
@@ -147,7 +59,7 @@ export default function MainStreamPage() {
             {/* Статистика */}
             <div className="row g-4 mb-4">
                 {/* Водители онлайн */}
-                {/* <div className="col-md-3">
+                <div className="col-md-3">
                     <div className="card h-100">
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-center">
@@ -161,7 +73,7 @@ export default function MainStreamPage() {
                             </div>
                         </div>
                     </div>
-                </div> */}
+                </div>
 
                 {/* Средний балл */}
                 <div className="col-md-3">
@@ -181,21 +93,21 @@ export default function MainStreamPage() {
                 </div>
 
                 {/* Нарушения */}
-                {/* <div className="col-md-3">
+                <div className="col-md-3">
                     <div className="card h-100">
-                    <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p className="card-text text-muted small mb-1">Нарушения</p>
-                            <h3 className="card-title mb-0">{totalViolations}</h3>
-                        </div>
-                        <div className="text-warning">
-                            <i className="bi bi-exclamation-triangle fs-2"></i>
-                        </div>
+                        <div className="card-body">
+                            <div className="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p className="card-text text-muted small mb-1">Нарушения</p>
+                                    <h3 className="card-title mb-0">{totalViolations}</h3>
+                                </div>
+                                <div className="text-warning">
+                                    <i className="bi bi-exclamation-triangle fs-2"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    </div>
-                </div> */}
+                </div>
 
                 {/* Активные рейсы */}
                 <div className="col-md-3">
@@ -245,49 +157,36 @@ export default function MainStreamPage() {
                             </select>
                         </div>
 
-                        {/* <div className="col-md-3">
+                        <div className="col-md-3">
                             <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                             <option value="all">Все</option>
                             <option value="online">Онлайн</option>
                             <option value="offline">Офлайн</option>
                             </select>
-                        </div> */}
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Список водителей */}
             <div className="row g-4">
-            {filteredDrivers.map((driver) => {
+            {filteredDrivers().map((selectionElement) => {
+                const driver: Driver = selectionElement.driver;
+                const car: Car = selectionElement.car;
                 const style = drivingStyles[
-                    driver.style as keyof typeof drivingStyles
+                    getDescriptionDivingStyle(driver.driving_rating) as keyof typeof drivingStyles
                 ];
 
                 return (
-                <div key={driver.plateNumber} className="col-lg-6">
+                <div key={car.license_plate} className="col-lg-6">
                     <div className="card h-100 shadow-sm">
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-start mb-3">
                                 <div className="d-flex align-items-center">
-                                    {/* <div className="position-relative me-3">
-                                    <img
-                                        src={driver.avatar || "/placeholder.svg?height=48&width=48"}
-                                        alt={driver.full_name}
-                                        className="rounded-circle"
-                                        width="48"
-                                        height="48"
-                                    />
-                                    <span
-                                        className={`position-absolute bottom-0 end-0 p-1 rounded-circle border border-2 border-white ${
-                                        driver.isOnline ? "bg-success" : "bg-secondary"
-                                        }`}
-                                        style={{ width: "16px", height: "16px" }}
-                                    ></span>
-                                    </div> */}
                                     <div>
-                                        <h6 className="card-title mb-1">{driver.name}</h6>
-                                        <p className="card-text text-muted small mb-0">{driver.vehicle}</p>
-                                        <p className="card-text text-muted small">{driver.plateNumber}</p>
+                                        <h6 className="card-title mb-1">{driver.full_name}</h6>
+                                        <p className="card-text text-muted small mb-0">{car.brand}{car.model}</p>
+                                        <p className="card-text text-muted small">{car.license_plate}</p>
                                     </div>
                                 </div>
 
@@ -297,44 +196,52 @@ export default function MainStreamPage() {
                             <div className="mb-3">
                             <div className="d-flex justify-content-between align-items-center mb-2">
                                 <div className="d-flex align-items-center text-muted small">
-                                <i className="bi bi-speedometer2 me-2"></i>
-                                <span>Средняя скорость: {driver.speed} км/ч</span>
+                                    <i className="bi bi-speedometer2 me-2"></i>
+                                    <span>Средняя скорость: 
+                                        {/* {driver.speed} км/ч */}
+                                    </span>
                                 </div>
                                 <div className="d-flex align-items-center small">
                                 <span className="text-muted me-2">Балл:</span>
                                 <span
                                     className={`fw-bold ${
-                                    driver.score >= 90 ? "text-success" : driver.score >= 70 ? "text-warning" : "text-danger"
+                                    driver.driving_rating >= 90 ? "text-success" : driver.driving_rating >= 70 ? "text-warning" : "text-danger"
                                     }`}
                                 >
-                                    {driver.score}
+                                    {driver.driving_rating}
                                 </span>
                                 </div>
                             </div>
 
                             <div className="d-flex align-items-center text-muted small mb-2">
                                 <i className="bi bi-geo-alt me-2"></i>
-                                <span className="text-truncate">{driver.location}</span>
+                                <span className="text-truncate">
+                                    Местоположение:
+                                    {/* {driver.location} */}
+                                </span>
                             </div>
 
                             <div className="d-flex justify-content-between align-items-center">
                                 <div className="d-flex align-items-center text-muted small">
-                                <i className="bi bi-clock me-2"></i>
-                                <span>{driver.lastUpdate}</span>
+                                    <i className="bi bi-clock me-2"></i>
+                                    <span>
+                                        Последнее обновление
+                                        {/* {driver.lastUpdate} */}
+                                    </span>
                                 </div>
 
                                 <div className="d-flex align-items-center">
-                                {driver.violations > 0 ? (
-                                    <div className="d-flex align-items-center text-danger">
-                                    <i className="bi bi-x-circle me-1"></i>
-                                    <span className="small">{driver.violations}</span>
-                                    </div>
-                                ) : (
-                                    <div className="d-flex align-items-center text-success">
-                                    <i className="bi bi-check-circle me-1"></i>
-                                    <span className="small">0</span>
-                                    </div>
-                                )}
+                                    {driver.number_violations > 0 ? (
+                                        <div className="d-flex align-items-center text-danger">
+                                        <i className="bi bi-x-circle me-1"></i>
+                                        <span className="small">{driver.number_violations}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="d-flex align-items-center text-success">
+                                        <i className="bi bi-check-circle me-1"></i>
+                                        <span className="small">0</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             </div>
@@ -354,7 +261,7 @@ export default function MainStreamPage() {
             })}
             </div>
 
-            {filteredDrivers.length === 0 && (
+            {filteredDrivers().length === 0 && (
             <div className="card">
                 <div className="card-body text-center py-5">
                 <div className="text-muted mb-3">

@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import "./page.css";
 
 export default function IndividualStreamPage() {
+    // TODO: Заменить на данные из database_service!
     // Моковые данные для детального просмотра водителя
     const driverDetail = {
     id: 1,

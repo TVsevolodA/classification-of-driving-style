@@ -37,7 +37,7 @@ def getting_car(db: Annotated[Session, Depends(get_db)], vin: str = None, car_id
         if owner_id is not None:
             # Вывести весь автопарк владельца
             cars = db.query(Car).filter_by(owner_id=owner_id).all()
-        elif vin is None and car_id is None:
+        elif vin is None and car_id is None and owner_id is None:
             # Вывести весь автопарк
             cars = db.query(Car).all()
         elif vin is not None:

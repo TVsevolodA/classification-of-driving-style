@@ -1,7 +1,25 @@
+from datetime import date
+
+from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Date, Float, event
 from sqlalchemy.orm import validates
 
 from models.base import Base
+
+
+class DriverBaseSchema(BaseModel):
+    id: int
+    director_id: int
+    license_number: str
+    expiration_driver_license: date
+    insurance_expiry_date: date
+    full_name: str
+    phone: str
+    email: str
+    driving_experience: int
+    issue_date: date
+    driving_rating: float
+    number_violations: int
 
 
 class Driver(Base):

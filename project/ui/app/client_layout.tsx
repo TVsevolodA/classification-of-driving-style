@@ -2,10 +2,11 @@
 import { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { Role, User } from "../models/user";
 import { useUser } from "./user_context";
 
 export default function ClientLayout({ children }: { children: React.ReactNode; }) {
-  const user = useUser();
+  const user: User = useUser();
   useEffect(() => {
     import("bootstrap/dist/js/bootstrap.js");
   }, []);
@@ -35,18 +36,24 @@ export default function ClientLayout({ children }: { children: React.ReactNode; 
             </ul>
 
             <ul className="navbar-nav">
-              {user !== null ? (
+              {user ? (
                 <>
                   <li className="nav-item">
-                    <a href="/garage" className="nav-link d-flex align-items-center">
-                      <i className="me-1 bi bi-car-front fs-3"/>
-                      { user["role"] === "admin" ? "Автопарк" : "Гараж"}
+                    <a href="/users" className="nav-link d-flex align-items-center">
+                      <i className="me-1 bi bi-people-fill fs-3"/>
+                      { user.role === Role.ADMIN ? "Пользователи" : "Водители"}
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a href={`/profile/${user["full_name"]}`} className="nav-link d-flex align-items-center">
+                    <a href="/garage" className="nav-link d-flex align-items-center">
+                      <i className="me-1 bi bi-car-front fs-3"/>
+                      { user.role === Role.ADMIN ? "Автопарк" : "Гараж"}
+                    </a>
+                  </li>
+                  <li className="nav-item">
+                    <a href={`/profile/${user.full_name}`} className="nav-link d-flex align-items-center">
                       <i className="me-1 bi bi-person fs-3"/>
-                      {user["full_name"]}
+                      {user.full_name}
                     </a>
                   </li>
                 </>

@@ -2,19 +2,12 @@
 
 import type React from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import "./page.css";
 import { useUser } from "../user_context";
+import { Role, User } from "../../models/user";
 import requestsToTheServer from "../../components/requests_to_the_server";
-
-interface CarType {
-    vin: string
-    owner: string
-    brand: string
-    model: string
-    year: number
-    licensePlate: string
-    mileage: number
-}
+import { Car } from "./page";
 
 enum TypeMessage {
     Error,
@@ -44,6 +37,17 @@ function addMessage(message: string, typeMessage: TypeMessage) {
     mainBlock.prepend(alertBlock);
 }
 
+function carComparison(oldCar: Car, newCar: Car) {
+    let changes = new Object();
+    for (let key in oldCar) {
+        if (oldCar[key] !== newCar[key]) {
+            changes[key] = newCar[key];
+        }
+    }
+    changes["id"] = oldCar.id;
+    return changes;
+}
+
 async function contactServer(requestUrl: string, typeRequest: string, dataForRequest: string) {
     const result = await requestsToTheServer(
         requestUrl,
@@ -64,34 +68,38 @@ async function contactServer(requestUrl: string, typeRequest: string, dataForReq
     }
 }
 
-export default function CarManagement({ userСars }: { userСars: CarType[]; }) {
+export default function CarManagement({ userСars }: { userСars: Car[]; }) {
+    const unknownId = -1;
     let url = "http://localhost:7000";
-    const [cars, setCars] = useState<CarType[]>(userСars);
-    const user = useUser();
+    const [cars, setCars] = useState<Car[]>(userСars);
+    const router = useRouter();
+    const user: User = useUser();
 
     const [searchQuery, setSearchQuery] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [editingCar, setEditingCar] = useState<CarType | null>(null);
-    const [carToDelete, setCarToDelete] = useState<CarType | null>(null);
+    const [editingCar, setEditingCar] = useState<Car | null>(null);
+    const [carToDelete, setCarToDelete] = useState<Car | null>(null);
     const [formData, setFormData] = useState({
+        id: unknownId,
         vin: "",
-        owner: user["username"],
+        owner_id: user.id,
         brand: "",
         model: "",
         year: new Date().getFullYear(),
-        licensePlate: "",
+        license_plate: "",
         mileage: 0,
     });
 
     const resetForm = () => {
         setFormData({
+            id: unknownId,
             vin: "",
-            owner: user["username"],
+            owner_id: user.id,
             brand: "",
             model: "",
             year: new Date().getFullYear(),
-            licensePlate: "",
+            license_plate: "",
             mileage: 0,
         });
         setEditingCar(null);
@@ -102,21 +110,22 @@ export default function CarManagement({ userСars }: { userСars: CarType[]; }) 
         setIsModalOpen(true);
     };
 
-    const openEditModal = (car: CarType) => {
+    const openEditModal = (car: Car) => {
         setFormData({
+            id: unknownId,
             vin: car.vin,
-            owner: user["username"],
+            owner_id: user.id,
             brand: car.brand,
             model: car.model,
             year: car.year,
-            licensePlate: car.licensePlate,
+            license_plate: car.license_plate,
             mileage: car.mileage,
         });
         setEditingCar(car);
         setIsModalOpen(true);
     };
 
-    const openDeleteModal = (car: CarType) => {
+    const openDeleteModal = (car: Car) => {
         setCarToDelete(car);
         setIsDeleteModalOpen(true);
     };
@@ -126,18 +135,26 @@ export default function CarManagement({ userСars }: { userСars: CarType[]; }) 
 
         if (editingCar) {
             // Изменение данных об автомобиле
+            let modifiedCarFields;
+            for (let car of cars) {
+                if (car.vin === editingCar.vin) {
+                    modifiedCarFields = carComparison(car, formData);
+                }
+            }
             setCars(
                 cars.map(
-                    (car) => (car.vin === editingCar.vin ? { ...car, ...formData } : car)
-                )
-            );
+                    (car) => (
+                        car.vin === editingCar.vin ? { ...car, ...formData }
+                        : car)
+                    )
+                );
             url += "/update/car";
-            await contactServer(url, "PUT", JSON.stringify(formData));
+            await contactServer(url, "PUT", JSON.stringify(modifiedCarFields));
         }
         else {
             // Добавление автомобиля в базу
-            const newCar: CarType = {
-                owner: user["username"],
+            const newCar: Car = {
+                owner_id: user.username,
                 ...formData,
             };
             setCars([...cars, newCar]);
@@ -169,7 +186,7 @@ export default function CarManagement({ userСars }: { userСars: CarType[]; }) 
         return (
         car.brand.toLowerCase().includes(query) ||
         car.model.toLowerCase().includes(query) ||
-        car.licensePlate.toLowerCase().includes(query)
+        car.license_plate.toLowerCase().includes(query)
         );
     });
 
@@ -224,30 +241,39 @@ export default function CarManagement({ userСars }: { userСars: CarType[]; }) 
         </div>
 
         {/* Автопарк */}
+
         {filteredCars.length === 0 ? (
                 <div className="empty-state">
                 {searchQuery ? (
                     <>
-                    <i className="bi bi-search car-icon d-block"></i>
-                    <h3 className="mb-3">Ничего не найдено</h3>
-                    <p className="mb-4">По запросу "{searchQuery}" автомобили не найдены</p>
-                    <button className="btn btn-outline-primary me-2" onClick={clearSearch}>
-                        Очистить поиск
-                    </button>
-                    <button className="btn btn-primary" onClick={openAddModal}>
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Добавить автомобиль
-                    </button>
+                        <i className="bi bi-search car-icon d-block"></i>
+                        <h3 className="mb-3">Ничего не найдено</h3>
+                        <p className="mb-4">По запросу "{searchQuery}" автомобили не найдены</p>
+                        <button className="btn btn-outline-primary me-2" onClick={clearSearch}>
+                            Очистить поиск
+                        </button>
+                        { user.role === Role.USER ?
+                        <>
+                            <button className="btn btn-primary" onClick={openAddModal}>
+                                <i className="bi bi-plus-circle me-2"></i>
+                                Добавить автомобиль
+                            </button>
+                        </>
+                        : <></>}
                     </>
                 ) : (
                     <>
-                    <i className="bi bi-car-front car-icon d-block"></i>
-                    <h3 className="mb-3">Нет автомобилей</h3>
-                    <p className="mb-4">Добавьте свой первый автомобиль, чтобы начать управление автопарком</p>
-                    <button className="btn btn-primary" onClick={openAddModal}>
-                        <i className="bi bi-plus-circle me-2"></i>
-                        Добавить автомобиль
-                    </button>
+                        <i className="bi bi-car-front car-icon d-block"></i>
+                        <h3 className="mb-3">Нет автомобилей</h3>
+                        { user.role === Role.USER ?
+                        <>
+                            <p className="mb-4">Добавьте свой первый автомобиль, чтобы начать управление автопарком</p>
+                            <button className="btn btn-primary" onClick={openAddModal}>
+                                <i className="bi bi-plus-circle me-2"></i>
+                                Добавить автомобиль
+                            </button>
+                        </>
+                        : <p className="mb-4">Автомобилей в системе нет. Добавьте нового клиента в сервис, чтобы получить данные о транспорте</p>}
                     </>
                 )}
             </div>
@@ -258,29 +284,39 @@ export default function CarManagement({ userСars }: { userСars: CarType[]; }) 
                 <div className="card car-card h-100">
                 <div className="card-header d-flex justify-content-between align-items-center">
                     <div className="d-flex align-items-center gap-2">
-                    <i className="bi bi-car-front text-primary"></i>
-                    <h6 className="mb-0 fw-bold">
-                        {car.brand} {car.model}
-                    </h6>
+                        <i className="bi bi-car-front text-primary"></i>
+                        <h6 className="mb-0 fw-bold">
+                            {car.brand} {car.model}
+                        </h6>
                     </div>
-                    <div className="btn-group" role="group">
-                    <button
-                        type="button"
-                        className="btn btn-outline-primary btn-sm"
-                        onClick={() => openEditModal(car)}
-                        title="Редактировать"
-                    >
-                        <i className="bi bi-pencil"></i>
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-outline-danger btn-sm"
-                        onClick={() => openDeleteModal(car)}
-                        title="Удалить"
-                    >
-                        <i className="bi bi-trash"></i>
-                    </button>
-                    </div>
+                    { user.role === Role.USER ?
+                    <>
+                        <div className="btn-group" role="group">
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => openEditModal(car)}
+                                title="Редактировать"
+                            >
+                                <i className="bi bi-pencil"></i>
+                            </button>
+                            <button type="button"
+                                className="btn btn-outline-success btn-sm"
+                                onClick={() => router.push(`/car/history/${car.id}`)}
+                                title="История поездок">
+                                    <i className="bi bi-clock-history"></i>
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => openDeleteModal(car)}
+                                title="Удалить"
+                            >
+                                <i className="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </>
+                    : <></> }
                 </div>
                 <div className="card-body">
                     <div className="row g-3 mb-3">
@@ -299,7 +335,7 @@ export default function CarManagement({ userСars }: { userСars: CarType[]; }) 
                     </div>
                     <div>
                         <small className="text-muted">Государственный номер</small>
-                        <div className="license-plate mt-1">{car.licensePlate}</div>
+                        <div className="license-plate mt-1">{car.license_plate}</div>
                     </div>
                 </div>
                 </div>
@@ -383,15 +419,15 @@ export default function CarManagement({ userСars }: { userСars: CarType[]; }) 
                     />
                     </div>
                     <div className="col-12">
-                        <label htmlFor="licensePlate" className="form-label">
+                        <label htmlFor="license_plate" className="form-label">
                             Государственный номер
                         </label>
                         <input
                             type="text"
                             className="form-control"
-                            id="licensePlate"
-                            value={formData.licensePlate}
-                            onChange={(e) => setFormData({ ...formData, licensePlate: e.target.value })}
+                            id="license_plate"
+                            value={formData.license_plate}
+                            onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
                             placeholder="А123БВ777"
                             required
                         />
