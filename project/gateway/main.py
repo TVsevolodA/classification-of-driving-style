@@ -9,10 +9,9 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 
-from Models.driver import Driver
 from Models.user import *
 from Models.token import *
-from Models.car import *
+from Models.trip import *
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
@@ -23,15 +22,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 NODE_ADDRESS =  "http://localhost:5430"
 
 
-def get_drivers(driver_id: int = None) -> List[Driver] | None:
-    url = NODE_ADDRESS + "/driver/read"
-    if driver_id is None:
-        res = requests.get(url)
-    else:
-        res = requests.get(url, params={ "driver_id": driver_id })
+def get_trips(
+        driver_id: int = None,
+        car_id: int = None,
+        trip_id: int = None): # -> List[Trip] | None
+    url = NODE_ADDRESS + "/trip/read/all"
+    res = requests.get(url, params={ "driver_id": driver_id, "car_id": car_id, "trip_id": trip_id })
     if res.status_code == status.HTTP_200_OK:
-        drivers: List[Driver] = res.json()
-        return drivers
+        trips = res.json() #: List[Trip]
+        return trips
     return None
 
 
@@ -114,7 +113,7 @@ def create_car(new_car: Car) -> List[Car] | None:
     car_dict = new_car.model_dump()
     res = requests.post(url, json=car_dict)
     if res.status_code == status.HTTP_201_CREATED:
-        return get_cars(car_id=new_car.id)
+        return get_cars(vin=new_car.vin)
     return None
 
 
@@ -483,22 +482,21 @@ async def delete_car_route(request: Request, current_user: Annotated[UserInDB, D
 
 
 
-@app.get(path="/drivers")
-async def get_info_about_drivers_and_cars(
-        current_user: Annotated[UserInDB, Depends(get_current_user)],
-        driver_id: int = None
-):
+@app.get(path="/trips")
+async def get_info_about_specific_trip(current_user: Annotated[UserInDB, Depends(get_current_user)],
+                                       driver_id: int = None, car_id: int = None, trip_id: int = None):
     try:
-        if driver_id is None:
-            driver_list: List[Driver] = get_drivers()
-        else:
-            driver_list: List[Driver] = get_drivers(driver_id=driver_id)
-        if driver_list is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Не удалось получить информацию о водителе-(ях).",
-            )
-        return driver_list
+        trips: List[Trip] = get_trips(
+            driver_id=driver_id,
+            car_id=car_id,
+            trip_id=trip_id
+        )
+        if trips is not None:
+            return trips
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Не удалось получить информацию о поездках.",
+        )
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)

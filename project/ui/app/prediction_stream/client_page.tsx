@@ -4,8 +4,8 @@ import { Car } from "../../models/car";
 import { Driver } from "../../models/driver";
 
 function getDescriptionDivingStyle(rating: number) {
-    if ( rating <= 3.3 ) return "aggressive";
-    else if ( rating > 3.3 && rating <= 6.6 ) return "vague";
+    if ( rating <= 1.6 ) return "aggressive";
+    else if ( rating > 1.6 && rating <= 3.7 ) return "vague";
     else return "normal";
 }
 
@@ -185,7 +185,7 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
                                 <div className="d-flex align-items-center">
                                     <div>
                                         <h6 className="card-title mb-1">{driver.full_name}</h6>
-                                        <p className="card-text text-muted small mb-0">{car.brand}{car.model}</p>
+                                        <p className="card-text text-muted small mb-0">{car.brand} {car.model}</p>
                                         <p className="card-text text-muted small">{car.license_plate}</p>
                                     </div>
                                 </div>
@@ -194,56 +194,58 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
                             </div>
 
                             <div className="mb-3">
-                            <div className="d-flex justify-content-between align-items-center mb-2">
-                                <div className="d-flex align-items-center text-muted small">
-                                    <i className="bi bi-speedometer2 me-2"></i>
-                                    <span>Средняя скорость: 
-                                        {/* {driver.speed} км/ч */}
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                    <div className="d-flex align-items-center">
+                                        <i className="bi bi-speedometer2 me-2"></i>
+                                        <span className="text-muted me-2">Средняя скорость:</span>
+                                        {/* <span className="fw-bold">
+                                            {car.average_speed} км/ч
+                                        </span> */}
+                                    </div>
+                                    <div className="d-flex align-items-center">
+                                        <span className="text-muted me-2">Балл:</span>
+                                        <span
+                                            className={`fw-bold ${
+                                            driver.driving_rating >= 90 ? "text-success" : driver.driving_rating >= 70 ? "text-warning" : "text-danger"
+                                            }`}
+                                        >
+                                            {driver.driving_rating}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* <div className="d-flex align-items-center text-muted small mb-2">
+                                    <i className="bi bi-geo-alt me-2"></i>
+                                    <span className="text-truncate">
+                                        Местоположение:
+                                        {driver.location}
                                     </span>
-                                </div>
-                                <div className="d-flex align-items-center small">
-                                <span className="text-muted me-2">Балл:</span>
-                                <span
-                                    className={`fw-bold ${
-                                    driver.driving_rating >= 90 ? "text-success" : driver.driving_rating >= 70 ? "text-warning" : "text-danger"
-                                    }`}
-                                >
-                                    {driver.driving_rating}
-                                </span>
-                                </div>
-                            </div>
+                                </div> */}
 
-                            <div className="d-flex align-items-center text-muted small mb-2">
-                                <i className="bi bi-geo-alt me-2"></i>
-                                <span className="text-truncate">
-                                    Местоположение:
-                                    {/* {driver.location} */}
-                                </span>
-                            </div>
+                                <div className="d-flex justify-content-between align-items-center">
+                                    {/* <div className="d-flex align-items-center text-muted small">
+                                        <i className="bi bi-clock me-2"></i>
+                                        <span>
+                                            Последнее обновление
+                                            {driver.lastUpdate}
+                                        </span>
+                                    </div> */}
 
-                            <div className="d-flex justify-content-between align-items-center">
-                                <div className="d-flex align-items-center text-muted small">
-                                    <i className="bi bi-clock me-2"></i>
-                                    <span>
-                                        Последнее обновление
-                                        {/* {driver.lastUpdate} */}
-                                    </span>
+                                    <div className="d-flex align-items-center">
+                                        {driver.number_violations > 0 ? (
+                                            <div className="d-flex align-items-center">
+                                                <i className="bi bi-x-circle me-2"></i>
+                                                <span className="me-2">Количество нарушений:</span>
+                                                <span className="fw-bold text-danger">{driver.number_violations}</span>
+                                            </div>
+                                        ) : (
+                                            <div className="d-flex align-items-center text-success">
+                                            <i className="bi bi-check-circle me-1"></i>
+                                            <span className="small">нарушений нет</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-
-                                <div className="d-flex align-items-center">
-                                    {driver.number_violations > 0 ? (
-                                        <div className="d-flex align-items-center text-danger">
-                                        <i className="bi bi-x-circle me-1"></i>
-                                        <span className="small">{driver.number_violations}</span>
-                                        </div>
-                                    ) : (
-                                        <div className="d-flex align-items-center text-success">
-                                        <i className="bi bi-check-circle me-1"></i>
-                                        <span className="small">0</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
                             </div>
 
                             <div className="border-top pt-3">

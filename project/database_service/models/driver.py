@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Date, Float, event
@@ -11,15 +11,18 @@ class DriverBaseSchema(BaseModel):
     id: int
     director_id: int
     license_number: str
-    expiration_driver_license: date
-    insurance_expiry_date: date
+    expiration_driver_license: datetime
     full_name: str
     phone: str
     email: str
     driving_experience: int
-    issue_date: date
+    issue_date: datetime
     driving_rating: float
     number_violations: int
+
+    class Config:
+        from_attributes = True
+        orm_mode = True
 
 
 class Driver(Base):
@@ -29,7 +32,6 @@ class Driver(Base):
     director_id = Column(Integer, nullable=False)
     license_number = Column(String, nullable=False, unique=True)
     expiration_driver_license = Column(Date, nullable=True)
-    insurance_expiry_date = Column(Date, nullable=True)
     full_name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
     email = Column(String, nullable=True)

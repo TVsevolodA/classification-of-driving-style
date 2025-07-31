@@ -6,5 +6,7 @@ export type Car = {
     model: string
     year: number
     license_plate: string
+    insurance_expiry_date: string
+    date_technical_inspection: string
     mileage: number
 }

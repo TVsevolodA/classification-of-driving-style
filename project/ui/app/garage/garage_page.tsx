@@ -7,7 +7,7 @@ import "./page.css";
 import { useUser } from "../user_context";
 import { Role, User } from "../../models/user";
 import requestsToTheServer from "../../components/requests_to_the_server";
-import { Car } from "./page";
+import { Car } from "../../models/car";
 
 enum TypeMessage {
     Error,
@@ -88,6 +88,8 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
         model: "",
         year: new Date().getFullYear(),
         license_plate: "",
+        insurance_expiry_date: "",
+        date_technical_inspection: "",
         mileage: 0,
     });
 
@@ -100,6 +102,8 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
             model: "",
             year: new Date().getFullYear(),
             license_plate: "",
+            insurance_expiry_date: "",
+            date_technical_inspection: "",
             mileage: 0,
         });
         setEditingCar(null);
@@ -119,6 +123,8 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
             model: car.model,
             year: car.year,
             license_plate: car.license_plate,
+            insurance_expiry_date: car.insurance_expiry_date,
+            date_technical_inspection: car.date_technical_inspection,
             mileage: car.mileage,
         });
         setEditingCar(car);
@@ -159,6 +165,7 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
             };
             setCars([...cars, newCar]);
             url += "/add/car";
+            delete formData["id"];
             await contactServer(url, "POST", JSON.stringify(formData));
         }
         setIsModalOpen(false);
@@ -337,6 +344,17 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
                         <small className="text-muted">Государственный номер</small>
                         <div className="license-plate mt-1">{car.license_plate}</div>
                     </div>
+
+                    <div className="row g-3 mb-3">
+                        <div className="col-6">
+                            <small className="text-muted">Cтраховка до</small>
+                            <div className="fw-semibold">{car.insurance_expiry_date}</div>
+                        </div>
+                        <div className="col-6">
+                            <small className="text-muted">Последнее ТО</small>
+                            <div className="fw-semibold">{car.date_technical_inspection}</div>
+                        </div>
+                    </div>
                 </div>
                 </div>
             </div>
@@ -405,18 +423,18 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
                     />
                     </div>
                     <div className="col-md-6">
-                    <label htmlFor="mileage" className="form-label">
-                        Пробег (км)
-                    </label>
-                    <input
-                        type="number"
-                        className="form-control"
-                        id="mileage"
-                        value={formData.mileage}
-                        onChange={(e) => setFormData({ ...formData, mileage: Number.parseInt(e.target.value) })}
-                        min="0"
-                        required
-                    />
+                        <label htmlFor="mileage" className="form-label">
+                            Пробег (км)
+                        </label>
+                        <input
+                            type="number"
+                            className="form-control"
+                            id="mileage"
+                            value={formData.mileage}
+                            onChange={(e) => setFormData({ ...formData, mileage: Number.parseInt(e.target.value) })}
+                            min="0"
+                            required
+                        />
                     </div>
                     <div className="col-12">
                         <label htmlFor="license_plate" className="form-label">
@@ -448,6 +466,50 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
                             required
                             readOnly={editingCar && formData.vin.length === 17 ? true : false}
                             disabled={editingCar && formData.vin.length === 17 ? true : false}
+                        />
+                    </div>
+                    <div className="col-md-12">
+                        <label htmlFor="insurance_expiry_date" className="form-label">
+                            Дата истечения действия страховки
+                        </label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            id="insurance_expiry_date"
+                            value={formData.insurance_expiry_date}
+                            onChange={(e) => setFormData({ ...formData, insurance_expiry_date: e.target.value })}
+                            min={(() => {
+                                const today = new Date();
+                                return today.toISOString().split('T')[0];
+                            })()}
+                            max={(() => {
+                                const today = new Date();
+                                today.setFullYear(today.getFullYear() + 1);
+                                return today.toISOString().split('T')[0];
+                            })()}
+                            required
+                        />
+                    </div>
+                                        <div className="col-md-12">
+                        <label htmlFor="date_technical_inspection" className="form-label">
+                            Дата последнего ТО
+                        </label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            id="date_technical_inspection"
+                            value={formData.date_technical_inspection}
+                            onChange={(e) => setFormData({ ...formData, date_technical_inspection: e.target.value })}
+                            min={(() => {
+                                const today = new Date();
+                                today.setFullYear(today.getFullYear() - 1);
+                                return today.toISOString().split('T')[0];
+                            })()}
+                            max={(() => {
+                                const today = new Date();
+                                return today.toISOString().split('T')[0];
+                            })()}
+                            required
                         />
                     </div>
                 </div>

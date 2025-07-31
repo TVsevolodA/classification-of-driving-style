@@ -3,7 +3,6 @@ export type Driver = {
     director_id: number
     license_number: string
     expiration_driver_license: string
-    insurance_expiry_date: string
     full_name: string
     phone: string
     email: string

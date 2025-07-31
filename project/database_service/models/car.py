@@ -1,22 +1,28 @@
-from  datetime import datetime as dt
+from  datetime import datetime
 
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Date
 from sqlalchemy.orm import validates
 
 from models.base import Base
 
-CURRENT_YEAR = dt.now().year
+CURRENT_YEAR = datetime.now().year
 
 class CarBaseSchema(BaseModel):
-    id: int
+    id: int | None = None
     vin: str
     owner_id: int
     brand: str
     model: str
     year: int = CURRENT_YEAR
     license_plate: str | None = None
+    insurance_expiry_date: datetime
+    date_technical_inspection: datetime
     mileage: int
+
+    class Config:
+        from_attributes = True
+        orm_mode = True
 
 
 class Car(Base):
@@ -29,12 +35,14 @@ class Car(Base):
     model = Column(String, nullable=False)
     year = Column(Integer, nullable=False)
     license_plate = Column(String, nullable=True, default="")
+    insurance_expiry_date = Column(Date, nullable=True)
+    date_technical_inspection = Column(Date, nullable=False)
     mileage = Column(Integer, nullable=False)
 
     @validates('year')
     def validate_year(self, _, year):
         MINIMUM_CAR_PRODUCTION_YEAR: int = 1950
-        assert year > dt.now().year, ["Год выпуска автомобиля больше текущего!"]
+        assert year > datetime.now().year, ["Год выпуска автомобиля больше текущего!"]
         assert MINIMUM_CAR_PRODUCTION_YEAR < year, ["Год выпуска автомобиля ниже минимального значения!"]
         return year
 

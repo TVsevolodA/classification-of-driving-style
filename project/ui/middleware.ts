@@ -3,12 +3,13 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
     // 1. Перечисляем охраняемые и общедоступные маршруты.
-    const protectedRoutes = ['/inference_instance', '/prediction_stream', '/profile', '/garage', '/users'];
+    const protectedRoutes = ['/inference_instance', '/prediction_stream', '/profile', '/garage', '/users', '/car'];
     const publicRoutes = ['/auth', '/'];
 
     // 2. Проверяем, является ли текущий маршрут защищенным или общедоступным.
     const path = request.nextUrl.pathname;
-    const isProtectedRoute = protectedRoutes.includes(path);
+    // const isProtectedRoute = protectedRoutes.includes(pathstartsWith);
+    const isProtectedRoute = protectedRoutes.some(routePrefix => path.startsWith(routePrefix));
     const isPublicRoute = publicRoutes.includes(path);
 
     // 4. Перенаправить на страницу авторизации,
@@ -19,3 +20,7 @@ export function middleware(request: NextRequest) {
     
     return NextResponse.next();
 }
+
+export const config = {
+    matcher: ['/car/:path*'],
+};
