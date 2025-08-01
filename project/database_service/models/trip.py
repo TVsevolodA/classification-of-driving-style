@@ -1,10 +1,8 @@
-from typing import List
+from pydantic import ConfigDict, BaseModel
 
-from pydantic import BaseModel, ConfigDict
-
-from models.car import *
-from models.driver import *
-from models.driver_car import *
+from models.car import CarBaseSchema
+from models.driver import DriverBaseSchema
+from models.driver_car import DriverCarBaseSchema
 
 
 class TripBaseModel(BaseModel):

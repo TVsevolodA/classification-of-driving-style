@@ -1,4 +1,4 @@
-from typing import List, Annotated, Type
+from typing import List, Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -6,36 +6,41 @@ from starlette import status
 from starlette.responses import JSONResponse
 
 from create_session import CreateSession
-from models.car import Car
-from models.driver import *
-from models.driver_car import *
-from models.trip import *
+from models.car import Car, CarBaseSchema
+from models.driver import Driver, DriverBaseSchema
+from models.driver_car import DriverCar, DriverCarBaseSchema
+from models.trip import TripBaseModel
 
 trip_router = APIRouter()
 get_db = CreateSession.get_db
 
 
-def get_id_cars(driver_cars: List[Type[DriverCar]]):
-    ids: List[int] = []
-    for driver_car in driver_cars:
-        ids.append(driver_car.car_id)
-    return ids
-
-# , response_model=List[Trip]
-@trip_router.get(path='/read/all')
+@trip_router.get(path='/read', response_model=List[TripBaseModel])
 def get_trips_all(db: Annotated[Session, Depends(get_db)],
-              driver_id: int = None,
-              car_id: int = None,
-              trip_id: int = None):
-    # try:
-    if driver_id is not None:
-        req = (db.query(Driver, DriverCar, Car)
-                 .join(DriverCar, Driver.id == DriverCar.driver_id)
-                 .join(Car, DriverCar.car_id == Car.id)
-                 .filter(Driver.id == driver_id)
-                 .all())
+                  driver_id: int = None,
+                  car_id: int = None,
+                  driver_car_id: int = None,
+                  owner_id: int = None,):
+    try:
+        query = (
+            db.query(Driver, DriverCar, Car)
+            .join(DriverCar, Driver.id == DriverCar.driver_id)
+            .join(Car, DriverCar.car_id == Car.id)
+        )
+
+        if driver_id is not None:
+            query = query.filter(Driver.id == driver_id)
+        elif car_id is not None:
+            query = query.filter(Car.id == car_id)
+        elif driver_car_id is not None:
+            query = query.filter(DriverCar.id == driver_car_id)
+        if owner_id is not None:
+            query = query.filter(Car.owner_id == owner_id, Driver.director_id == owner_id)
+
+        selection: List = query.all()
         trips: List[TripBaseModel] = []
-        for driver, driver_car, car in req:
+
+        for driver, driver_car, car in selection:
             new_trip = TripBaseModel(
                 driver=DriverBaseSchema.model_validate(driver),
                 driver_car=DriverCarBaseSchema.model_validate(driver_car),
@@ -43,21 +48,5 @@ def get_trips_all(db: Annotated[Session, Depends(get_db)],
             )
             trips.append(new_trip)
         return trips
-    else:
-        drivers = db.query(Driver).all()
-    return drivers
-    # except Exception as e:
-    #     return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
-
-
-
-# , response_model=List[Trip]
-# @trip_router.get(path='/read')
-# def get_trips(db: Annotated[Session, Depends(get_db)],
-#               driver_id: int = None,
-#               car_id: int = None,
-#               trip_id: int = None):
-#     try:
-#         return []
-#     except Exception as e:
-#         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)

@@ -22,7 +22,6 @@ class DriverCarBaseSchema(BaseModel):
 
     class Config:
         from_attributes = True
-        orm_mode = True
 
 class DriverCar(Base):
     __tablename__ = "driver_car"

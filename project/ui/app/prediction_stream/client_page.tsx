@@ -1,7 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Car } from "../../models/car";
 import { Driver } from "../../models/driver";
+import { Trip } from "../../models/trip";
+import { DriverCar } from "../../models/driverCar";
 
 function getDescriptionDivingStyle(rating: number) {
     if ( rating <= 1.6 ) return "aggressive";
@@ -9,8 +12,8 @@ function getDescriptionDivingStyle(rating: number) {
     else return "normal";
 }
 
-export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; cars: Car[]; }) {
-    // TODO: Разработать модель CarDriver и передавать сюда данные
+export default function MainStreamPage({ trips }: { trips: Trip[]; }) {
+    console.log(trips);
     // Типы стилей вождения
     const drivingStyles = {
         normal: { label: "Безопасный", color: "success", textColor: "text-success", bgColor: "bg-success-subtle" },
@@ -19,25 +22,33 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
     };
     const [searchTerm, setSearchTerm] = useState("");
     const [styleFilter, setStyleFilter] = useState("all");
-    const [statusFilter, setStatusFilter] = useState("all");
+    // const [statusFilter, setStatusFilter] = useState("all");
 
     const filteredDrivers = () => {
-        let suitableResult = [];
-        for (let iter = 0; iter < Math.min(drivers.length, cars.length); iter++) {
+        let suitableResult: Trip[] = [];
+        for (const trip of trips) {
             const matchesSearch =
-            drivers[iter].full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            cars[iter].license_plate.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesStyle = styleFilter === "all" || getDescriptionDivingStyle(drivers[iter].driving_rating) === styleFilter;
+            trip.driver.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            trip.car.license_plate.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesStyle = styleFilter === "all" || getDescriptionDivingStyle(trip.driver.driving_rating) === styleFilter;
             if (matchesSearch && matchesStyle) {
-                suitableResult.push( {"driver": drivers[iter], "car":cars[iter]} );
+                suitableResult.push( trip );
             }
         }
         return suitableResult;
     };
 
-    const onlineDrivers = drivers.length; // TODO: Потом так и оставить!
-    const avgScore = Math.round(drivers.reduce((sum, d) => sum + d.driving_rating, 0) / drivers.length);
-    const totalViolations = drivers.reduce((sum, d) => sum + d.number_violations, 0);
+    const router = useRouter();
+    const goToDetails = (tripId: number) => {
+        const uniqueNumberStream = 2;
+        const streamId = tripId % uniqueNumberStream + 1;
+        const data = encodeURIComponent(JSON.stringify({"tripId": tripId}));
+        router.push(`/prediction_stream/${streamId}?data=${data}`);
+    }
+
+    // const onlineDrivers = drivers.length;
+    const avgScore = Math.round(trips.reduce((sum, trip) => sum + trip.driver.driving_rating, 0) / trips.length);
+    const totalViolations = trips.reduce((sum, trip) => sum + trip.driver.number_violations, 0);
 
     return (
     <div className="min-vh-100 bg-light p-4">
@@ -59,7 +70,7 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
             {/* Статистика */}
             <div className="row g-4 mb-4">
                 {/* Водители онлайн */}
-                <div className="col-md-3">
+                {/* <div className="col-md-3">
                     <div className="card h-100">
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-center">
@@ -73,7 +84,7 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Средний балл */}
                 <div className="col-md-3">
@@ -116,7 +127,7 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
                         <div className="d-flex justify-content-between align-items-center">
                         <div>
                             <p className="card-text text-muted small mb-1">Активные рейсы</p>
-                            <h3 className="card-title mb-0">{drivers.length}</h3>
+                            <h3 className="card-title mb-0">{trips.length}</h3>
                         </div>
                         <div className="text-info">
                             <i className="bi bi-activity fs-2"></i>
@@ -146,7 +157,7 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
                             </div>
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-md-6">
                             <select className="form-select" value={styleFilter} onChange={(e) => setStyleFilter(e.target.value)}>
                             <option value="all">Все стили</option>
                             <option value="normal">Безопасный</option>
@@ -157,13 +168,13 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
                             </select>
                         </div>
 
-                        <div className="col-md-3">
+                        {/* <div className="col-md-3">
                             <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                             <option value="all">Все</option>
                             <option value="online">Онлайн</option>
                             <option value="offline">Офлайн</option>
                             </select>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
@@ -173,12 +184,14 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
             {filteredDrivers().map((selectionElement) => {
                 const driver: Driver = selectionElement.driver;
                 const car: Car = selectionElement.car;
+                const driverCar: DriverCar = selectionElement.driver_car;
                 const style = drivingStyles[
                     getDescriptionDivingStyle(driver.driving_rating) as keyof typeof drivingStyles
                 ];
 
+                const uiid = `${car.id}${driver.id}`;
                 return (
-                <div key={car.license_plate} className="col-lg-6">
+                <div key={uiid} className="col-lg-6">
                     <div className="card h-100 shadow-sm">
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-start mb-3">
@@ -250,7 +263,7 @@ export default function MainStreamPage({ drivers, cars }: { drivers: Driver[]; c
 
                             <div className="border-top pt-3">
                                 <div className="row g-2">
-                                    <button className="btn btn-outline-primary btn-sm w-100">
+                                    <button className="btn btn-outline-primary btn-sm w-100" onClick={ () => goToDetails(driverCar.id)}>
                                         <i className="bi bi-car-front me-2"></i>
                                         Детали
                                     </button>

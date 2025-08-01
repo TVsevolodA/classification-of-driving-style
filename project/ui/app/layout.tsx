@@ -1,6 +1,7 @@
 import requestsToTheServer from "../components/requests_to_the_server";
+import { User } from "../models/user";
 import ClientLayout from "./client_layout";
-import { User, UserContextProvider }  from "./user_context";
+import { UserContextProvider }  from "./user_context";
 import { cookies } from 'next/headers';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

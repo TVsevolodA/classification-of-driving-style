@@ -8,7 +8,6 @@ export function middleware(request: NextRequest) {
 
     // 2. Проверяем, является ли текущий маршрут защищенным или общедоступным.
     const path = request.nextUrl.pathname;
-    // const isProtectedRoute = protectedRoutes.includes(pathstartsWith);
     const isProtectedRoute = protectedRoutes.some(routePrefix => path.startsWith(routePrefix));
     const isPublicRoute = publicRoutes.includes(path);
 
@@ -20,7 +19,3 @@ export function middleware(request: NextRequest) {
     
     return NextResponse.next();
 }
-
-export const config = {
-    matcher: ['/car/:path*'],
-};

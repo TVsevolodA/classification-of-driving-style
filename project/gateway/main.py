@@ -25,11 +25,21 @@ NODE_ADDRESS =  "http://localhost:5430"
 def get_trips(
         driver_id: int = None,
         car_id: int = None,
-        trip_id: int = None): # -> List[Trip] | None
-    url = NODE_ADDRESS + "/trip/read/all"
-    res = requests.get(url, params={ "driver_id": driver_id, "car_id": car_id, "trip_id": trip_id })
+        driver_car_id: int = None,
+        owner_id: int = None,
+) -> List[Trip] | None:
+    url = NODE_ADDRESS + "/trip/read"
+    res = requests.get(
+        url,
+        params={
+            "driver_id": driver_id,
+            "car_id": car_id,
+            "driver_car_id": driver_car_id,
+            "owner_id": owner_id
+        }
+    )
     if res.status_code == status.HTTP_200_OK:
-        trips = res.json() #: List[Trip]
+        trips: List[Trip] = res.json()
         return trips
     return None
 
@@ -483,13 +493,18 @@ async def delete_car_route(request: Request, current_user: Annotated[UserInDB, D
 
 
 @app.get(path="/trips")
-async def get_info_about_specific_trip(current_user: Annotated[UserInDB, Depends(get_current_user)],
-                                       driver_id: int = None, car_id: int = None, trip_id: int = None):
+async def get_info_about_specific_trip(
+        current_user: Annotated[UserInDB, Depends(get_current_user)],
+        driver_id: int = None,
+        car_id: int = None,
+        driver_car_id: int = None
+):
     try:
         trips: List[Trip] = get_trips(
             driver_id=driver_id,
             car_id=car_id,
-            trip_id=trip_id
+            driver_car_id=driver_car_id,
+            owner_id= current_user.id if current_user.role == Roles.user else None
         )
         if trips is not None:
             return trips

@@ -1,28 +1,32 @@
 "use client";
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import './page.css';
-import requestsToTheServer from '../../../../components/requests_to_the_server';
+import "./page.css";
+import requestsToTheServer from '../../../components/requests_to_the_server';
+import ClientIndividualStreamPage from './client_page';
+import { Trip } from '../../../models/trip';
 
-export default function CarHistoryPage() {
-    const { id } = useParams();
-    const [tripData, setTripData] = useState(null);
+export default function IndividualStreamPage() {
+    const searchParams = useSearchParams();
+    const dataParam = searchParams.get('data');
+    const tripId = dataParam ? JSON.parse(decodeURIComponent(dataParam)).tripId : null;
+    const [tripData, setTripData] = useState<Trip>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     useEffect(() => {
-        if (!id) return;
+        if (!tripId) return;
 
         setLoading(true);
         setError(null);
 
-        const url = `http://localhost:7000/trips?driver_id=${id}`;
+        const url = `http://localhost:7000/trips?driver_car_id=${tripId}`;
         requestsToTheServer(url, 'GET')
         .then(res => {
             if (!res.ok) throw new Error('Ошибка загрузки данных');
             return res.data;
         })
         .then(data => {
-            setTripData(data);
+            setTripData(data[0]);
         })
         .catch(err => {
             setError(err.message);
@@ -30,13 +34,13 @@ export default function CarHistoryPage() {
         .finally(() => {
             setLoading(false);
         });
-    }, [id]);
+    }, [tripId]);
 
     if (loading) {
         return (
         <div className="parent">
             <div className="loading">
-                <strong>Загрузка истории...</strong>
+                <strong>Загрузка информации...</strong>
                 <div className="spinner-border ms-auto" role="status" aria-hidden="true"></div>
             </div>
         </div>
@@ -46,15 +50,5 @@ export default function CarHistoryPage() {
     if (error) {
         return <div>Ошибка: {error}</div>;
     }
-
-    if (!tripData) {
-        return <div>Данные не найдены</div>;
-    }
-
-    return (
-        <div>
-        <h1>Информация о поездке {id}</h1>
-        <pre>{JSON.stringify(tripData, null, 2)}</pre>
-        </div>
-    );
+    return <ClientIndividualStreamPage tripInfo = {tripData}></ClientIndividualStreamPage>
 }

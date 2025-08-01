@@ -1,103 +1,42 @@
-"use client";
-import Hls from 'hls.js';
-import { useParams } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
-import "./page.css";
+import Hls from "hls.js";
+import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { Trip } from "../../../models/trip";
+import requestsToTheServer from "../../../components/requests_to_the_server";
+import { TripStatistics } from "../../../models/tripStatistics";
 
-export default function IndividualStreamPage() {
-    // TODO: Заменить на данные из database_service!
-    // Моковые данные для детального просмотра водителя
-    const driverDetail = {
-    id: 1,
-    name: "Алексей Петров",
-    vehicle: "Toyota Camry",
-    plateNumber: "А123БВ77",
-    style: "safe",
-    speed: 65,
-    location: "Москва, Тверская ул.",
-    lastUpdate: "2 мин назад",
-    score: 95,
-    violations: 0,
-    isOnline: true,
-    phone: "+7 (999) 123-45-67",
-    email: "alexey.petrov@example.com",
-    experience: "5 лет",
-    totalDistance: "125,430 км",
-    totalTrips: 1247,
-    avgSpeed: 62,
-    fuelEfficiency: 7.2,
-    safetyRating: 4.8,
-    lastMaintenance: "12.12.2024",
-    insurance: "15.06.2025",
-    license: "22.08.2027",
+export default function ClientIndividualStreamPage({ tripInfo }: { tripInfo: Trip; }) {
+    const { streamId } = useParams();
+
+    const [tripHistory, setTripHistory] = useState<Trip[]>([]);
+    const [tripStatistics, setTripStatistics] = useState([]);
+
+    const calculateStatistics = (data: Trip[]) => {
+        let statistics = new Map();
+        for ( const trip of data) {
+            const tripDate = trip.driver_car.start_date;
+            let currentValue: TripStatistics = { quantity: 0, estimation: 0, violations: 0 };
+            if ( statistics.has(tripDate) ) {
+                currentValue = statistics.get(tripDate);
+                currentValue.quantity += 1;
+                currentValue.estimation = Math.round(
+                    (
+                        currentValue.estimation +
+                        ( trip.driver.driving_rating * 100 / 5 )
+                    )
+                    / currentValue.quantity
+                );
+                currentValue.violations += trip.driver_car.violations_per_trip;
+            }
+            else {
+                currentValue.quantity = 1;
+                currentValue.estimation = Math.round( trip.driver.driving_rating * 100 / 5 );
+                currentValue.violations = trip.driver_car.violations_per_trip;
+            }
+            statistics.set(tripDate, currentValue);
+        }
+        setTripStatistics( Array.from(statistics, ([date, tripStat]) => ({ date, tripStat })) );
     }
-
-    // История поездок
-    const tripHistory = [
-        {
-        id: 1,
-        date: "30.12.2024",
-        time: "14:30",
-        from: "Красная площадь",
-        to: "Шереметьево",
-        distance: "45 км",
-        duration: "1ч 15мин",
-        avgSpeed: "58 км/ч",
-        violations: 1,
-        score: 98,
-        status: "completed",
-        },
-        {
-        id: 2,
-        date: "30.12.2024",
-        time: "11:45",
-        from: "Арбат",
-        to: "Сокольники",
-        distance: "28 км",
-        duration: "45мин",
-        avgSpeed: "62 км/ч",
-        violations: 1,
-        score: 85,
-        status: "completed",
-        },
-        {
-        id: 3,
-        date: "29.12.2024",
-        time: "18:20",
-        from: "Тверская",
-        to: "Крылатское",
-        distance: "32 км",
-        duration: "1ч 5мин",
-        avgSpeed: "55 км/ч",
-        violations: 0,
-        score: 92,
-        status: "completed",
-        },
-        {
-        id: 4,
-        date: "29.12.2024",
-        time: "09:15",
-        from: "Домодедово",
-        to: "Центр",
-        distance: "52 км",
-        duration: "1ч 30мин",
-        avgSpeed: "48 км/ч",
-        violations: 2,
-        score: 78,
-        status: "completed",
-        },
-    ]
-
-    // Статистика по дням недели
-    const weeklyStats = [
-        { day: "Пн", trips: 8, avgScore: 60, violations: 10 },
-        { day: "Вт", trips: 12, avgScore: 88, violations: 2 },
-        { day: "Ср", trips: 10, avgScore: 95, violations: 0 },
-        { day: "Чт", trips: 15, avgScore: 87, violations: 3 },
-        { day: "Пт", trips: 18, avgScore: 90, violations: 2 },
-        { day: "Сб", trips: 14, avgScore: 93, violations: 1 },
-        { day: "Вс", trips: 6, avgScore: 96, violations: 0 },
-    ]
 
     const [activeTab, setActiveTab] = useState("live");
     const [liveData, setLiveData] = useState({
@@ -106,49 +45,11 @@ export default function IndividualStreamPage() {
         temperature: 85,
         lastUpdate: '',
     });
-
-    // Симуляция обновления данных в реальном времени
-    // useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         setLiveData((prev) => ({
-    //         ...prev,
-    //         speed: Math.max(10, prev.speed + (Math.random() - 0.5) * 10),
-    //         rpm: Math.max(1200, prev.rpm + (Math.random() - 0.5) * 200),
-    //         temperature: Math.max(70, Math.min(90, prev.temperature + (Math.random() - 0.5) * 5)),
-    //         lastUpdate: new Date().toLocaleTimeString(),
-    //         }));
-    //     }, 2000);
-
-    //     return () => clearInterval(interval);
-    // }, []);
-
     const getScoreColor = (score: number) => {
         if (score >= 90) return "success"
         if (score >= 70) return "warning"
         return "danger"
     }
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "completed":
-            return <span className="badge bg-success">Завершена</span>
-            case "active":
-            return <span className="badge bg-primary">Активна</span>
-            case "cancelled":
-            return <span className="badge bg-danger">Отменена</span>
-            default:
-            return <span className="badge bg-secondary">Неизвестно</span>
-        }
-    }
-
-    // Показать местоположение авто на карте
-    // function showMap() {
-    //     setActiveTab("live");
-    //     window.scrollTo(0, document.body.scrollHeight);
-    // }
-
-    const params = useParams();
-    const { stream } = params;
     const videoRef = useRef(null);
     const [messages, setMessages] = useState([]);
     const [drivingStyle, setDrivingStyle] = useState("Идет анализ стиля...");
@@ -157,6 +58,15 @@ export default function IndividualStreamPage() {
         [2,  'Нормальный'],
         [3,  'Неопределенный'],
     ]);
+    const requestStory = async (nameTab: string) => {
+        const url = `http://localhost:7000/trips?driver_id=${tripInfo.driver.id}`;
+        const res = await requestsToTheServer(url, 'GET')
+        if (!res.ok) throw new Error('Ошибка загрузки данных');
+        console.log(res.data)
+        setTripHistory(res.data);
+        setActiveTab(nameTab);
+        return res.data;
+    };
 
     useEffect(() => {
         setDrivingStyle( estimationAverageIndicator() );
@@ -175,7 +85,7 @@ export default function IndividualStreamPage() {
     useEffect(() => {
         if (activeTab === "live" && videoRef.current && Hls.isSupported()) {
             const hls = new Hls();
-            hls.loadSource(`http://localhost:5010/hls/stream${stream}/live.m3u8`);
+            hls.loadSource(`http://localhost:5010/hls/stream${streamId}/live.m3u8`);
             hls.attachMedia(videoRef.current);
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 videoRef.current.play();
@@ -196,8 +106,7 @@ export default function IndividualStreamPage() {
 
         socket.onmessage = (event) => {
             const newDataObject = JSON.parse(event.data);
-            if (Number(newDataObject["metadata"]["stream"]) === Number(stream)) {
-                // console.log(event.data);
+            if (Number(newDataObject["metadata"]["stream"]) === Number(streamId)) {
                 setLiveData((prev) => ({
                     ...prev,
                     speed: newDataObject["metadata"]["speed"],
@@ -238,15 +147,13 @@ export default function IndividualStreamPage() {
                                 <div className="position-relative me-4">
                                     <i className="bi bi-person fs-1"/>
                                     <span
-                                        className={`position-absolute bottom-0 end-0 p-2 rounded-circle border border-3 border-white ${
-                                        driverDetail.isOnline ? "bg-success" : "bg-secondary"
-                                        }`}
+                                        className="position-absolute bottom-0 end-0 p-2 rounded-circle border border-3 border-white bg-success"
                                         style={{ width: "24px", height: "24px" }}
                                     />
                                 </div>
                                 <div>
                                     <h2 className="mb-1">
-                                        {driverDetail.name}
+                                        {tripInfo.driver.full_name}
                                         <span className="badge bg-danger ms-2 animate-pulse">
                                         <i className="bi bi-broadcast me-1"></i>
                                         Онлайн
@@ -254,7 +161,7 @@ export default function IndividualStreamPage() {
                                     </h2>
                                     <p className="text-muted mb-1">
                                         <i className="bi bi-car-front me-2"></i>
-                                        {driverDetail.vehicle} • {driverDetail.plateNumber}
+                                        {tripInfo.car.brand} {tripInfo.car.model} • {tripInfo.car.license_plate}
                                     </p>
                                     <p className="text-muted small mb-0">
                                         <i className="bi bi-clock me-2"></i>
@@ -269,12 +176,6 @@ export default function IndividualStreamPage() {
                                     {drivingStyle}
                                 </span>
                             </div>
-                            {/* <div className="d-flex justify-content-md-end gap-2">
-                                <button className="btn btn-outline-secondary" onClick={showMap}>
-                                    <i className="bi bi-geo-alt me-2"></i>
-                                    Показать на карте
-                                </button>
-                            </div> */}
                         </div>
                     </div>
                 </div>
@@ -285,10 +186,10 @@ export default function IndividualStreamPage() {
                 <div className="col-md-3">
                 <div className="card text-center h-100">
                     <div className="card-body">
-                    <div className="display-6 text-success mb-2">{driverDetail.score}</div>
+                    <div className="display-6 text-success mb-2">{tripInfo.driver.driving_rating}</div>
                     <h6 className="card-title">Рейтинг безопасности</h6>
                     <div className="progress" style={{ height: "6px" }}>
-                        <div className="progress-bar bg-success" style={{ width: `${driverDetail.score}%` }}></div>
+                        <div className="progress-bar bg-success" style={{ width: `${tripInfo.driver.driving_rating * 100 / 5}%` }}></div>
                     </div>
                     </div>
                 </div>
@@ -305,13 +206,15 @@ export default function IndividualStreamPage() {
                 <div className="col-md-3">
                 <div className="card text-center h-100">
                     <div className="card-body">
-                    <div className="display-6 text-warning mb-2">{driverDetail.violations}</div>
-                    <h6 className="card-title">Нарушения сегодня</h6>
-                    <small className="text-muted">за последние 24ч</small>
+                        <div className="display-6 text-warning mb-2">
+                            {tripInfo.driver_car.violations_per_trip}
+                        </div>
+                        <h6 className="card-title">Нарушения сегодня</h6>
+                        <small className="text-muted">за последние 24ч</small>
                     </div>
                 </div>
                 </div>
-                <div className="col-md-3">
+                {/* <div className="col-md-3">
                 <div className="card text-center h-100">
                     <div className="card-body">
                     <div className="display-6 text-info mb-2">{driverDetail.totalTrips}</div>
@@ -319,7 +222,7 @@ export default function IndividualStreamPage() {
                     <small className="text-muted">за все время</small>
                     </div>
                 </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Табы с детальной информацией */}
@@ -350,7 +253,7 @@ export default function IndividualStreamPage() {
                         <li className="nav-item" role="presentation">
                         <button
                             className={`nav-link ${activeTab === "trips" ? "active" : ""}`}
-                            onClick={() => setActiveTab("trips")}
+                            onClick={async () => await requestStory("trips")}
                             type="button"
                         >
                             <i className="bi bi-list me-2"></i>
@@ -360,7 +263,10 @@ export default function IndividualStreamPage() {
                         <li className="nav-item" role="presentation">
                         <button
                             className={`nav-link ${activeTab === "analytics" ? "active" : ""}`}
-                            onClick={() => setActiveTab("analytics")}
+                            onClick={async () => {
+                                const stat = await requestStory("analytics");
+                                calculateStatistics(stat);
+                            }}
                             type="button"
                         >
                             <i className="bi bi-graph-up me-2"></i>
@@ -411,21 +317,6 @@ export default function IndividualStreamPage() {
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Карта в реальном времени */}
-                                {/* <div className="card mt-4">
-                                    <div className="card-header">
-                                        <h6 className="mb-0">
-                                            <i className="bi bi-map me-2"></i>
-                                            Местоположение в реальном времени
-                                        </h6>
-                                    </div>
-                                    <div className="card-body p-0">
-                                        <div className="position-relative bg-light" style={{ height: "300px" }}>
-                                            <RouteMap />
-                                        </div>
-                                    </div>
-                                </div> */}
                             </div>
 
                             {/* Телематика в реальном времени */}
@@ -532,21 +423,21 @@ export default function IndividualStreamPage() {
                                             <i className="bi bi-telephone me-2 text-muted"></i>
                                             <strong>Телефон:</strong>
                                         </div>
-                                        <span>{driverDetail.phone}</span>
+                                        <span>{tripInfo.driver.phone}</span>
                                     </div>
                                     <div className="list-group-item d-flex justify-content-between align-items-center px-0">
                                         <div>
                                             <i className="bi bi-envelope me-2 text-muted"></i>
                                             <strong>Email:</strong>
                                         </div>
-                                        <span>{driverDetail.email}</span>
+                                        <span>{tripInfo.driver.email}</span>
                                     </div>
                                     <div className="list-group-item d-flex justify-content-between align-items-center px-0">
                                         <div>
                                             <i className="bi bi-calendar me-2 text-muted"></i>
                                             <strong>Стаж вождения:</strong>
                                         </div>
-                                        <span>{driverDetail.experience}</span>
+                                        <span>{tripInfo.driver.driving_experience}</span>
                                     </div>
                                 </div>
                             </div>
@@ -558,14 +449,14 @@ export default function IndividualStreamPage() {
                                             <i className="bi bi-speedometer me-2 text-muted"></i>
                                             <strong>Средняя скорость:</strong>
                                         </div>
-                                        <span>{driverDetail.avgSpeed} км/ч</span>
+                                        <span>{tripInfo.driver_car.average_speed} км/ч</span>
                                     </div>
                                     <div className="list-group-item d-flex justify-content-between align-items-center px-0">
                                         <div>
                                             <i className="bi bi-fuel-pump me-2 text-muted"></i>
                                             <strong>Расход топлива:</strong>
                                         </div>
-                                        <span>{driverDetail.fuelEfficiency} л/100км</span>
+                                        <span>{tripInfo.driver_car.fuel_consumption} л/100км</span>
                                     </div>
                                     <div className="list-group-item d-flex justify-content-between align-items-center px-0">
                                         <div>
@@ -573,7 +464,7 @@ export default function IndividualStreamPage() {
                                             <strong>Рейтинг безопасности:</strong>
                                         </div>
                                         <span>
-                                            {driverDetail.safetyRating}/5.0
+                                            {tripInfo.driver.driving_rating}/5.0
                                             <i className="bi bi-star-fill text-warning ms-1"></i>
                                         </span>
                                     </div>
@@ -592,11 +483,11 @@ export default function IndividualStreamPage() {
                                 <table className="table table-hover">
                                     <thead className="table-light">
                                         <tr>
-                                        <th>Дата/Время</th>
+                                        <th>Дата</th>
                                         <th>Маршрут</th>
-                                        <th>Расстояние</th>
-                                        <th>Длительность</th>
-                                        <th>Ср. скорость</th>
+                                        <th>Расстояние (км)</th>
+                                        <th>Длительность (мин)</th>
+                                        <th>Ср. скорость (км/ч)</th>
                                         <th>Нарушения</th>
                                         <th>Балл</th>
                                         <th>Статус</th>
@@ -604,39 +495,36 @@ export default function IndividualStreamPage() {
                                     </thead>
                                     <tbody>
                                         {tripHistory.map((trip) => (
-                                        <tr key={trip.id}>
+                                        <tr key={trip.driver_car.id}>
                                             <td>
-                                                <div>
-                                                    <div className="fw-medium">{trip.date}</div>
-                                                    <small className="text-muted">{trip.time}</small>
-                                                </div>
+                                                <div className="fw-medium">{trip.driver_car.start_date.split("T")[0]}</div>
                                             </td>
                                             <td>
                                                 <div>
                                                     <div className="small">
                                                     <i className="bi bi-geo-alt text-success me-1"></i>
-                                                    {trip.from}
+                                                    {trip.driver_car.place_departure}
                                                     </div>
                                                     <div className="small">
                                                     <i className="bi bi-geo-alt-fill text-danger me-1"></i>
-                                                    {trip.to}
+                                                    {trip.driver_car.place_destination}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{trip.distance}</td>
-                                            <td>{trip.duration}</td>
-                                            <td>{trip.avgSpeed}</td>
+                                            <td>{trip.driver_car.distance}</td>
+                                            <td>{trip.driver_car.duration}</td>
+                                            <td>{trip.driver_car.average_speed}</td>
                                             <td>
-                                                {trip.violations > 0 && trip.violations < 5 ?
-                                                ( <span className="badge bg-warning">{trip.violations}</span> ) :
-                                                trip.violations > 5 ?
-                                                ( <span className="badge bg-danger">{trip.violations}</span> ) :
+                                                {trip.driver_car.violations_per_trip > 0 && trip.driver_car.violations_per_trip < 5 ?
+                                                ( <span className="badge bg-warning">{trip.driver_car.violations_per_trip}</span> ) :
+                                                trip.driver_car.violations_per_trip > 5 ?
+                                                ( <span className="badge bg-danger">{trip.driver_car.violations_per_trip}</span> ) :
                                                 ( <span className="badge bg-success">0</span> )}
                                             </td>
                                             <td>
-                                                <span className={`badge bg-${getScoreColor(trip.score)}`}>{trip.score}</span>
+                                                <span className={`badge bg-${getScoreColor(trip.driver.driving_rating * 100 / 5)}`}>{Math.round(trip.driver.driving_rating * 100 / 5)}</span>
                                             </td>
-                                            <td>{getStatusBadge(trip.status)}</td>
+                                            <td><span className="badge bg-success">Завершена</span></td>
                                         </tr>
                                         ))}
                                     </tbody>
@@ -648,33 +536,34 @@ export default function IndividualStreamPage() {
                     {/* Вкладка "Аналитика" */}
                     {activeTab === "analytics" && (
                         <div>
-                            <h5 className="mb-4">Статистика по дням недели</h5>
+                            <h5 className="mb-4">Статистика</h5>
                             <div className="row g-4">
-                                {weeklyStats.map((stat) => (
-                                    <div key={stat.day} className="col-md-6 col-lg-4">
+                                {/* date, tripStat */}
+                                {tripStatistics.map((record) => (
+                                    <div key={(record["date"])} className="col-md-6 col-lg-4">
                                         <div className="card">
                                             <div className="card-body text-center">
-                                                <h6 className="card-title">{stat.day}</h6>
+                                                <h6 className="card-title">{record["date"].split("T")[0]}</h6>
                                                 <div className="mb-3">
-                                                    <div className="h4 text-primary">{stat.trips}</div>
+                                                    <div className="h4 text-primary">{record["tripStat"]["quantity"]}</div>
                                                     <small className="text-muted">поездок</small>
                                                 </div>
                                                 <div className="mb-2">
                                                     <div className="d-flex justify-content-between align-items-center mb-1">
                                                         <small>Средний балл</small>
-                                                        <small className="fw-medium">{stat.avgScore}</small>
+                                                        <small className="fw-medium">{record["tripStat"]["estimation"]}</small>
                                                     </div>
                                                     <div className="progress" style={{ height: "6px" }}>
                                                         <div
-                                                        className={`progress-bar bg-${getScoreColor(stat.avgScore)}`}
-                                                        style={{ width: `${stat.avgScore}%` }}
+                                                        className={`progress-bar bg-${getScoreColor(record["tripStat"]["estimation"])}`}
+                                                        style={{ width: `${record["tripStat"]["estimation"]}%` }}
                                                         />
                                                     </div>
                                                 </div>
                                                 <div className="d-flex justify-content-between align-items-center">
                                                     <small>Нарушения</small>
-                                                    <span className={`badge bg-${stat.violations > 0 && stat.violations < 5 ? "warning" : stat.violations > 5 ? "danger": "success"}`}>
-                                                        {stat.violations}
+                                                    <span className={`badge bg-${record["tripStat"]["violations"] > 0 && record["tripStat"]["violations"] < 5 ? "warning" : record["tripStat"]["violations"] > 5 ? "danger": "success"}`}>
+                                                        {record["tripStat"]["violations"]}
                                                     </span>
                                                 </div>
                                             </div>
@@ -696,7 +585,9 @@ export default function IndividualStreamPage() {
                                             <i className="bi bi-card-text me-2 text-primary"></i>
                                             <strong>Водительские права</strong>
                                             <br />
-                                            <small className="text-muted">Действуют до {driverDetail.license}</small>
+                                            <small className="text-muted">
+                                                Действуют до {tripInfo.driver.expiration_driver_license.split("T")[0]}
+                                            </small>
                                         </div>
                                         <span className="badge bg-success">Действует</span>
                                     </div>
@@ -705,7 +596,9 @@ export default function IndividualStreamPage() {
                                             <i className="bi bi-shield-check me-2 text-info"></i>
                                             <strong>Страховка</strong>
                                             <br />
-                                            <small className="text-muted">Действует до {driverDetail.insurance}</small>
+                                            <small className="text-muted">
+                                                Действует до {tripInfo.car.insurance_expiry_date.split("T")[0]}
+                                            </small>
                                         </div>
                                         <span className="badge bg-success">Действует</span>
                                     </div>
@@ -719,7 +612,7 @@ export default function IndividualStreamPage() {
                                             <i className="bi bi-tools me-2 text-warning"></i>
                                             <strong>Последнее ТО</strong>
                                             <br />
-                                            <small className="text-muted">{driverDetail.lastMaintenance}</small>
+                                            <small className="text-muted">{tripInfo.car.date_technical_inspection.split("T")[0]}</small>
                                         </div>
                                         <span className="badge bg-success">Пройдено</span>
                                     </div>
@@ -728,7 +621,7 @@ export default function IndividualStreamPage() {
                                             <i className="bi bi-speedometer2 me-2 text-secondary"></i>
                                             <strong>Общий пробег</strong>
                                             <br />
-                                            <small className="text-muted">{driverDetail.totalDistance}</small>
+                                            <small className="text-muted">{tripInfo.car.mileage}</small>
                                         </div>
                                         <span className="badge bg-info">Актуально</span>
                                     </div>

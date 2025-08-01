@@ -69,7 +69,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode; 
           </div>
         </div>
       </nav>
-      <main style={{ display: 'flex',  alignItems: 'center', justifyContent: 'center' }}>
+      {/* style={{ display: 'flex',  alignItems: 'center', justifyContent: 'center' }} */}
+      <main>
         {children}
       </main>
   </body>

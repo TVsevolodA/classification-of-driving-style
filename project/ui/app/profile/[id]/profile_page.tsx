@@ -249,7 +249,7 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
             </div>
 
             {/* Delete Profile Button */}
-            <div className="text-center mb-4">
+            <div className="text-center mt-4">
                 <button className="btn btn-danger btn-lg d-flex align-items-center justify-content-center gap-2 mx-auto px-4"
                 onClick={deleteProfile}>
                 <i className="bi bi-pencil-square"></i>

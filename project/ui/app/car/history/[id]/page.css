@@ -1,0 +1,11 @@
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.parent {
+    position: absolute;
+    top: 50%;
+    left: 45%;
+}
