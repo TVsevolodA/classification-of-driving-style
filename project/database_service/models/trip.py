@@ -10,4 +10,4 @@ class TripBaseModel(BaseModel):
 
     car: CarBaseSchema
     driver: DriverBaseSchema
-    driver_car: DriverCarBaseSchema
+    driver_car: DriverCarBaseSchema | None = None

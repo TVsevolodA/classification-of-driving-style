@@ -287,7 +287,7 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
         ) : (
         <div className="row g-4">
             {filteredCars.map((car) => (
-            <div key={car.vin} className="col-md-6 col-lg-4">
+            <div key={car.id} className="col-md-6 col-lg-4">
                 <div className="card car-card h-100">
                 <div className="card-header d-flex justify-content-between align-items-center">
                     <div className="d-flex align-items-center gap-2">
@@ -296,34 +296,34 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
                             {car.brand} {car.model}
                         </h6>
                     </div>
-                    { user.role === Role.USER ?
-                    <>
-                        <div className="btn-group" role="group">
-                            <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() => openEditModal(car)}
-                                title="Редактировать"
-                            >
-                                <i className="bi bi-pencil"></i>
-                            </button>
-                            <button type="button"
-                                className="btn btn-outline-success btn-sm"
-                                onClick={() => router.push(`/car/history/${car.id}`)}
-                                title="История поездок">
-                                    <i className="bi bi-clock-history"></i>
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-outline-danger btn-sm"
-                                onClick={() => openDeleteModal(car)}
-                                title="Удалить"
-                            >
-                                <i className="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </>
-                    : <></> }
+                    <div className="btn-group" role="group">
+                        <button type="button"
+                            className="btn btn-outline-success btn-sm"
+                            onClick={() => router.push(`/car/history/${car.id}`)}
+                            title="История поездок">
+                                <i className="bi bi-clock-history"></i>
+                        </button>
+                        { user.role === Role.USER ?
+                        <>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => openEditModal(car)}
+                                    title="Редактировать"
+                                >
+                                    <i className="bi bi-pencil"></i>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() => openDeleteModal(car)}
+                                    title="Удалить"
+                                >
+                                    <i className="bi bi-trash"></i>
+                                </button>
+                        </>
+                        : <></> }
+                    </div>
                 </div>
                 <div className="card-body">
                     <div className="row g-3 mb-3">
@@ -348,11 +348,11 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
                     <div className="row g-3 mb-3">
                         <div className="col-6">
                             <small className="text-muted">Cтраховка до</small>
-                            <div className="fw-semibold">{car.insurance_expiry_date}</div>
+                            <div className="fw-semibold">{car.insurance_expiry_date.split("T")[0]}</div>
                         </div>
                         <div className="col-6">
                             <small className="text-muted">Последнее ТО</small>
-                            <div className="fw-semibold">{car.date_technical_inspection}</div>
+                            <div className="fw-semibold">{car.date_technical_inspection.split("T")[0]}</div>
                         </div>
                     </div>
                 </div>
@@ -490,7 +490,7 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
                             required
                         />
                     </div>
-                                        <div className="col-md-12">
+                    <div className="col-md-12">
                         <label htmlFor="date_technical_inspection" className="form-label">
                             Дата последнего ТО
                         </label>

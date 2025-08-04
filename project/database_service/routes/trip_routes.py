@@ -1,6 +1,7 @@
 from typing import List, Annotated
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import func, cast, Float
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
@@ -48,5 +49,48 @@ def get_trips_all(db: Annotated[Session, Depends(get_db)],
             )
             trips.append(new_trip)
         return trips
+    except Exception as e:
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
+
+
+def find_out_rating(db: Session, table, rating_calc_func):
+    return (
+        db.query(
+            table,
+            rating_calc_func.label("rating")
+        )
+        .join(DriverCar, DriverCar.driver_id == table.id)
+    )
+
+@trip_router.get(path='/best', response_model=TripBaseModel)
+def get_best_driver_and_car(
+        db: Annotated[Session, Depends(get_db)],
+        owner_id: int | None = None,
+):
+    try:
+        rating_expr = 1 - func.avg(cast(DriverCar.violations_per_trip, Float) / DriverCar.distance)
+        if owner_id:
+            query_driver = ( find_out_rating(db, Driver, rating_expr)
+                             .filter(Driver.director_id == owner_id)
+                             .group_by(Driver.id, Driver.full_name)
+                             .order_by(rating_expr.desc())
+                             )
+            query_car = ( find_out_rating(db, Car, rating_expr)
+                          .filter(Car.owner_id == owner_id)
+                          .group_by(Car.id, Car.model)
+                          .order_by(rating_expr.desc())
+                          )
+        else:
+            query_driver = ( find_out_rating(db, Driver, rating_expr)
+                             .group_by(Driver.id, Driver.full_name)
+                             .order_by(rating_expr.desc())
+                             )
+            query_car = ( find_out_rating(db, Car, rating_expr)
+                          .group_by(Car.id, Car.model)
+                          .order_by(rating_expr.desc())
+                          )
+        best_driver, _ = query_driver.first()
+        best_car, _ = query_car.first()
+        return TripBaseModel(driver=best_driver, car=best_car)
     except Exception as e:
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)

@@ -1,3 +1,10 @@
+export type DriversData = {
+    drivers: Driver[]
+    bestDriver: Driver | null
+    worstDriver: Driver | null
+    averageDrivers: Driver[]
+}
+
 export type Driver = {
     id: number
     director_id: number

@@ -3,29 +3,32 @@ import { useRouter } from "next/navigation";
 import requestsToTheServer from "../../../components/requests_to_the_server";
 import EditProfileForm from "./modal_window_edit_profile";
 import { useState } from "react";
+import { Driver } from "../../../models/driver";
+import { Car } from "../../../models/car";
+import { User } from "../../../models/user";
 
-export default function ProfilePage({ userData }: { userData: Object; }) {
+export default function ProfilePage({ userData, driverData, carData }: { userData: User; driverData: Driver; carData: Car }) {
     const router = useRouter();
-    const personalData = {
-        pathProfilePhoto: "/",
-        full_name: userData["full_name"],
-        email: userData["username"],
-        phone: userData["phone"],
-        address: userData["address"],
-    };
+    // const personalData = {
+    //     pathProfilePhoto: "/",
+    //     full_name: userData["full_name"],
+    //     email: userData["username"],
+    //     phone: userData["phone"],
+    //     address: userData["address"],
+    // };
     // TODO: Заменить на среднее значение по водителям из database_service!
-    const drivingData = {
-        rating: 8.7,
-        experience: 12,
-        safeDriving: 92,
+    // const drivingData = {
+    //     rating: 8.7,
+    //     experience: 12,
+    //     safeDriving: 92,
         
-    };
-    const carData = {
-        makeAndModel: "Toyota Camry",
-        yearRelease: 2021,
-        stateNumber: "А123БВ77",
-        mileage: 78.450,
-    };
+    // };
+    // const carData = {
+    //     makeAndModel: "Toyota Camry",
+    //     yearRelease: 2021,
+    //     stateNumber: "А123БВ77",
+    //     mileage: 78.450,
+    // };
 
     const logOut = async () => {
         const url = 'http://localhost:7000/logout';
@@ -76,34 +79,40 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
                     style={{ background: "linear-gradient(135deg, #1976d2 0%, #3f51b5 100%)", color: "white" }}
                 >
                     <div className="row align-items-center">
-                        <div className="col-auto">
-                            <div className="position-relative">
-                                <img
+                        <div className="col-auto" style={{ height: "100px" }}>
+                            <div style={{
+                                    border: "1px solid white",
+                                    height: "100%",
+                                    display: "flex",
+                                    alignItems: "center"
+                                }}>
+                                Фото профиля
+                                {/* <img
                                     src={personalData.pathProfilePhoto}
                                     alt="Фото профиля"
                                     className="rounded-circle border border-4 border-white"
-                                />
+                                /> */}
                             </div>
                         </div>
                         <div className="col">
-                            <h2 className="h3 fw-bold mb-3">{personalData.full_name}</h2>
+                            <h2 className="h3 fw-bold mb-3">{userData.full_name}</h2>
                             <div className="row g-3 text-light">
                                 <div className="col-md-6">
                                     <div className="d-flex align-items-center gap-2">
                                         <i className="bi bi-envelope"></i>
-                                        <span>{personalData.email}</span>
+                                        <span>{userData.username}</span>
                                     </div>
                                 </div>
                                 <div className="col-md-6">
                                     <div className="d-flex align-items-center gap-2">
                                         <i className="bi bi-telephone"></i>
-                                        <span>{personalData.phone}</span>
+                                        <span>{userData.phone}</span>
                                     </div>
                                 </div>
                             </div>
                             <div className="d-flex align-items-center gap-2 mt-2 text-light">
                                 <i className="bi bi-geo-alt"></i>
-                                <span>{personalData.address}</span>
+                                <span>{userData.address}</span>
                             </div>
                         </div>
                     </div>
@@ -131,15 +140,26 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
                         <div className="card-header bg-white border-bottom">
                             <h5 className="card-title mb-0 d-flex align-items-center gap-2">
                             <i className="bi bi-person text-primary"></i>
-                            Данные водителя
+                            Лучший водитель
                             </h5>
                             <small className="text-muted">Статистика и рейтинг вождения</small>
                         </div>
                         <div className="card-body">
+                            <div className="d-flex align-items-center gap-3 p-3 bg-light rounded mb-4">
+                                <div
+                                    className="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center"
+                                    style={{ width: "64px", height: "64px" }}
+                                >
+                                    <i className="bi bi-person-bounding-box text-primary fs-3"></i>
+                                </div>
+                                <div className="flex-grow-1">
+                                    <h6 className="fw-semibold mb-1">{driverData.full_name}</h6>
+                                </div>
+                            </div>
                             <div className="row g-3 mb-4">
                                 <div className="col-6">
                                     <div className="text-center p-3 bg-primary bg-opacity-10 rounded">
-                                    <div className="h2 fw-bold text-primary mb-1">{drivingData.rating}</div>
+                                    <div className="h2 fw-bold text-primary mb-1">{driverData.driving_rating}</div>
                                     <div className="small text-muted">Рейтинг</div>
                                     <div className="mt-2">
                                         <i className="bi bi-star-fill text-warning"></i>
@@ -152,7 +172,7 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
                                 </div>
                                 <div className="col-6">
                                     <div className="text-center p-3 bg-success bg-opacity-10 rounded">
-                                    <div className="h2 fw-bold text-success mb-1">{drivingData.experience}</div>
+                                    <div className="h2 fw-bold text-success mb-1">{driverData.driving_experience}</div>
                                     <div className="small text-muted">Стаж</div>
                                     <div className="mt-2">
                                         <i className="bi bi-calendar text-success"></i>
@@ -166,29 +186,30 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
                             <div className="mb-4">
                                 <div className="d-flex justify-content-between small mb-2">
                                     <span>Безопасность вождения</span>
-                                    <span className="fw-medium">{drivingData.safeDriving}%</span>
+                                    <span className="fw-medium">{Math.round(driverData.driving_rating * 100 / 5)}%</span>
                                 </div>
                                 <div className="progress" style={{ height: "8px" }}>
-                                    <div className="progress-bar bg-success" style={{ width: "92%" }}></div>
+                                    <div className="progress-bar bg-success"
+                                    style={{ width: `${driverData.driving_rating * 100 / 5}%` }}></div>
                                 </div>
                             </div>
 
-                            {/* <hr />
+                            <hr />
 
                             <div className="row text-center g-3">
-                            <div className="col-4">
-                                <div className="h5 fw-semibold text-dark mb-0">45,230</div>
-                                <div className="small text-muted">км пройдено</div>
+                                {/* <div className="col-4">
+                                    <div className="h5 fw-semibold text-dark mb-0">45,230</div>
+                                    <div className="small text-muted">км пройдено</div>
+                                </div>
+                                <div className="col-4">
+                                    <div className="h5 fw-semibold text-dark mb-0">127</div>
+                                    <div className="small text-muted">поездок</div>
+                                </div> */}
+                                <div className="col-4">
+                                    <div className="h5 fw-semibold text-dark mb-0">{driverData.number_violations}</div>
+                                    <div className="small text-muted">нарушения</div>
+                                </div>
                             </div>
-                            <div className="col-4">
-                                <div className="h5 fw-semibold text-dark mb-0">127</div>
-                                <div className="small text-muted">поездок</div>
-                            </div>
-                            <div className="col-4">
-                                <div className="h5 fw-semibold text-dark mb-0">3</div>
-                                <div className="small text-muted">нарушения</div>
-                            </div>
-                            </div> */}
                         </div>
                     </div>
                 </div>
@@ -199,22 +220,22 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
                     <div className="card-header bg-white border-bottom">
                         <h5 className="card-title mb-0 d-flex align-items-center gap-2">
                         <i className="bi bi-car-front text-primary"></i>
-                        Транспортное средство
+                        Лучший автомобиль
                         </h5>
                         <small className="text-muted">Информация о вашем автомобиле</small>
                     </div>
                     <div className="card-body">
                         <div className="d-flex align-items-center gap-3 p-3 bg-light rounded mb-4">
-                        <div
-                            className="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center"
-                            style={{ width: "64px", height: "64px" }}
-                        >
-                            <i className="bi bi-car-front text-primary fs-3"></i>
-                        </div>
-                        <div className="flex-grow-1">
-                            <h6 className="fw-semibold mb-1">{carData.makeAndModel}</h6>
-                            <p className="text-muted mb-2">{carData.yearRelease} год выпуска</p>
-                        </div>
+                            <div
+                                className="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center"
+                                style={{ width: "64px", height: "64px" }}
+                            >
+                                <i className="bi bi-car-front text-primary fs-3"></i>
+                            </div>
+                            <div className="flex-grow-1">
+                                <h6 className="fw-semibold mb-1">{carData.model} {carData.brand}</h6>
+                                <p className="text-muted mb-2">{carData.year} год выпуска</p>
+                            </div>
                         </div>
 
                         <div className="row g-3 mb-4">
@@ -223,7 +244,7 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
                             className="form-control bg-white border text-center fw-bold"
                             style={{ fontFamily: "monospace" }}
                             >
-                                {carData.stateNumber}
+                                {carData.license_plate}
                             </div>
                         </div>
 
@@ -239,10 +260,10 @@ export default function ProfilePage({ userData }: { userData: Object; }) {
                             </div>
                         </div>
 
-                        <button className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2">
+                        {/* <button className="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2">
                         <i className="bi bi-gear"></i>
                         Настроить автомобиль
-                        </button>
+                        </button> */}
                     </div>
                     </div>
                 </div>

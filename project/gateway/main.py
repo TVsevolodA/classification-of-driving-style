@@ -43,6 +43,27 @@ def get_trips(
         return trips
     return None
 
+def get_best_driver_and_car(owner_id: int) -> Trip | None:
+    url = NODE_ADDRESS + "/trip/best"
+    res = requests.get( url, params={ "owner_id": owner_id } )
+    if res.status_code == status.HTTP_200_OK:
+        best_driver_car: Trip = res.json()
+        return best_driver_car
+    return None
+
+def get_drivers(user_id: int, driver_id: int | None = None) -> List[Driver] | None:
+    url = NODE_ADDRESS + "/driver/read"
+    res = requests.get(
+        url,
+        params={
+            "user_id": user_id,
+            "driver_id": driver_id
+        }
+    )
+    if res.status_code == status.HTTP_200_OK:
+        drivers: List[Driver] = res.json()
+        return drivers
+    return None
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -511,6 +532,37 @@ async def get_info_about_specific_trip(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Не удалось получить информацию о поездках.",
+        )
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
+
+
+@app.get(path="/trips/best")
+async def get_best_driver_car(current_user: Annotated[UserInDB, Depends(get_current_user)]):
+    try:
+        driver_car: Trip = get_best_driver_and_car(
+            owner_id= current_user.id if current_user.role == Roles.user else None
+        )
+        if driver_car is not None:
+            return driver_car
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Не удалось получить информацию.",
+        )
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
+
+@app.get(path="/drivers")
+async def get_drivers_route(current_user: Annotated[UserInDB, Depends(get_current_user)]):
+    try:
+        drivers: List[Driver] = get_drivers(user_id =current_user.id if current_user.role == Roles.user else None)
+        if drivers is not None:
+            return drivers
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Не удалось получить информацию о водителях.",
         )
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
