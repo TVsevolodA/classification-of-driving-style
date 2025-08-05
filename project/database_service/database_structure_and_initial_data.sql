@@ -29,7 +29,7 @@ license_number TEXT NOT NULL UNIQUE,    -- Серия и номер ВУ
 expiration_driver_license TEXT NULL,  -- Дата окончания срока действия ВУ
 full_name TEXT NOT NULL,
 phone TEXT NOT NULL,
-email TEXT NULL,
+email TEXT NULL UNIQUE,
 driving_experience INTEGER NOT NULL CHECK(driving_experience >= 0), -- Стаж вождения
 issue_date TEXT NOT NULL CHECK(issue_date < expiration_driver_license),  -- Дата выдачи ВУ
 driving_rating REAL NOT NULL DEFAULT 5, -- Рейтинг безопасности

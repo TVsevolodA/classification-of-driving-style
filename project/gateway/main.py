@@ -51,18 +51,38 @@ def get_best_driver_and_car(owner_id: int) -> Trip | None:
         return best_driver_car
     return None
 
-def get_drivers(user_id: int, driver_id: int | None = None) -> List[Driver] | None:
+def get_drivers(
+        user_id: int,
+        driver_id: int | None = None,
+        license_number: str | None = None
+) -> List[Driver] | None:
     url = NODE_ADDRESS + "/driver/read"
     res = requests.get(
         url,
         params={
             "user_id": user_id,
-            "driver_id": driver_id
+            "driver_id": driver_id,
+            "license_number": license_number,
         }
     )
     if res.status_code == status.HTTP_200_OK:
         drivers: List[Driver] = res.json()
         return drivers
+    return None
+
+def create_driver(user_id: int, new_driver: Driver) -> List[Driver] | None:
+    url = NODE_ADDRESS + "/driver/create"
+    car_dict = new_driver.model_dump()
+    res = requests.post(url, json=car_dict)
+    if res.status_code == status.HTTP_201_CREATED:
+        return get_drivers(user_id=user_id, license_number=new_driver.license_number)
+    return None
+
+def update_driver(driver_replaceable_fields: dict) -> List[Driver] | None:
+    url = NODE_ADDRESS + "/driver/update"
+    res = requests.put(url, json=driver_replaceable_fields)
+    if res.status_code == status.HTTP_200_OK:
+        return get_drivers(driver_replaceable_fields.get("id"))
     return None
 
 def verify_password(plain_password, hashed_password):
@@ -567,3 +587,43 @@ async def get_drivers_route(current_user: Annotated[UserInDB, Depends(get_curren
     except Exception as e:
         print(f'Ошибка в gateway:\n{e}')
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
+
+
+@app.put(path="/update/driver")
+async def update_driver_route(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
+    try:
+        object_form: dict = await request.json()
+        if object_form.get("driving_experience"):
+            object_form["driving_experience"] = int( object_form.get("driving_experience") )
+        update_result = update_driver(driver_replaceable_fields=object_form)
+        if update_result is not None:
+            return {"message": "Данные успешно обновлены."}
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Водителя с такими данными нет в базе.",
+        )
+    except HTTPException as http_exc:
+        print(f'Ошибка в gateway, связанная с обновлением данных о водителе:\n{http_exc}')
+        return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)
+
+
+@app.post(path="/add/driver")
+async def add_driver_route(request: Request, current_user: Annotated[UserInDB, Depends(get_current_user)]):
+    try:
+        object_form: dict = await request.json()
+        created_car = create_driver(user_id=current_user.id, new_driver=Driver(**object_form))
+        if created_car is not None:
+            return JSONResponse(content={"message": "Водитель успешно зарегистрирован."}, status_code=201)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Водитель уже зарегистрирован.",
+        )
+    except HTTPException as http_exc:
+        print(f'Ошибка в gateway, связанная с регистрацией водителя:\n{http_exc}')
+        return JSONResponse(content={"error": http_exc.detail}, status_code=http_exc.status_code)
+    except Exception as e:
+        print(f'Ошибка в gateway:\n{e}')
+        return JSONResponse(content={}, status_code=400)

@@ -8,7 +8,7 @@ from models.base import Base
 
 
 class DriverBaseSchema(BaseModel):
-    id: int
+    id: int | None = None
     director_id: int
     license_number: str
     expiration_driver_license: datetime
@@ -17,8 +17,8 @@ class DriverBaseSchema(BaseModel):
     email: str
     driving_experience: int
     issue_date: datetime
-    driving_rating: float
-    number_violations: int
+    driving_rating: float | None = 5
+    number_violations: int | None = 0
 
     class Config:
         from_attributes = True
@@ -45,6 +45,12 @@ class Driver(Base):
         assert MINIMUM_DRIVING_EXPERIENCE < driving_experience,\
             ["Стаж вождения не может быть отрицательным числом!"]
         return driving_experience
+
+    @validates('expiration_driver_license', 'issue_date')
+    def validate_expiration_driver_license(self, _, date):
+        if type(date) is str:
+            return datetime.strptime(date, "%Y-%m-%d").date()
+        return date
 
 def checking_driver_license(mapper, connection, target):
     if target.issue_date >= target.expiration_driver_license:

@@ -9,26 +9,6 @@ import { User } from "../../../models/user";
 
 export default function ProfilePage({ userData, driverData, carData }: { userData: User; driverData: Driver; carData: Car }) {
     const router = useRouter();
-    // const personalData = {
-    //     pathProfilePhoto: "/",
-    //     full_name: userData["full_name"],
-    //     email: userData["username"],
-    //     phone: userData["phone"],
-    //     address: userData["address"],
-    // };
-    // TODO: Заменить на среднее значение по водителям из database_service!
-    // const drivingData = {
-    //     rating: 8.7,
-    //     experience: 12,
-    //     safeDriving: 92,
-        
-    // };
-    // const carData = {
-    //     makeAndModel: "Toyota Camry",
-    //     yearRelease: 2021,
-    //     stateNumber: "А123БВ77",
-    //     mileage: 78.450,
-    // };
 
     const logOut = async () => {
         const url = 'http://localhost:7000/logout';

@@ -38,12 +38,15 @@ export default function ClientLayout({ children }: { children: React.ReactNode; 
             <ul className="navbar-nav">
               {user ? (
                 <>
+                { user.role === Role.USER ?
                   <li className="nav-item">
                     <a href="/users" className="nav-link d-flex align-items-center">
                       <i className="me-1 bi bi-people-fill fs-3"/>
-                      { user.role === Role.ADMIN ? "Пользователи" : "Водители"}
+                      Водители
+                      {/* { user.role === Role.ADMIN ? "Пользователи" : "Водители"} */}
                     </a>
                   </li>
+                  : <></> }
                   <li className="nav-item">
                     <a href="/garage" className="nav-link d-flex align-items-center">
                       <i className="me-1 bi bi-car-front fs-3"/>
