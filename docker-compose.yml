@@ -1,10 +1,10 @@
 services:
-#  ui:
-#    image: ui
-#    container_name: ui
-#    build: "./project/ui"
-#    ports:
-#      - 3000:3000
+  ui:
+    image: ui
+    container_name: ui
+    build: "./project/ui"
+    ports:
+      - 3000:3000
 
   database_service:
     image: database_service

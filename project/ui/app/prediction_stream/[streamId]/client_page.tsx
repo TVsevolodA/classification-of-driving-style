@@ -62,7 +62,6 @@ export default function ClientIndividualStreamPage({ tripInfo }: { tripInfo: Tri
         const url = `http://localhost:7000/trips?driver_id=${tripInfo.driver.id}`;
         const res = await requestsToTheServer(url, 'GET')
         if (!res.ok) throw new Error('Ошибка загрузки данных');
-        console.log(res.data)
         setTripHistory(res.data);
         setActiveTab(nameTab);
         return res.data;
