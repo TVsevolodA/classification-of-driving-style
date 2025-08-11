@@ -25,8 +25,8 @@ export default async function UserInformationPage() {
     * Иначе пользователей севисом, с правами на чтение!
     */
     let usersData: DriversData;
-
-    const url = "http://localhost:7000/drivers";
+    // localhost
+    const url = "http://gateway:7000/drivers";
     const cookieStore = await cookies();
     const token = cookieStore.get('token');
     if ( token !== undefined ) {

@@ -16,7 +16,8 @@ async function contactServer(requestUrl: string, typeRequest: string, token: str
 }
 
 export default async function ProfilePageWrapper() {
-    let url = "http://localhost:7000/users/me";
+    // localhost
+    let url = "http://gateway:7000/users/me";
     const cookieStore = await cookies();
     const token = cookieStore.get('token');
     let isAuthorized;
@@ -27,7 +28,8 @@ export default async function ProfilePageWrapper() {
         if ( !isAuthorized.ok ) {
             redirect('/auth');
         }
-        url = "http://localhost:7000/trips/best";
+        // localhost
+        url = "http://gateway:7000/trips/best";
         const driverCarsInfo = await contactServer(url, "GET", token.value);
         console.log(driverCarsInfo)
         if ( driverCarsInfo.ok ) {

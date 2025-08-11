@@ -7,7 +7,8 @@ export default async function LoadingMainStreamPage() {
     const cookieStore = await cookies();
     const token = cookieStore.get('token');
     if ( token !== undefined ) {
-        let url = 'http://localhost:7000/trips';
+        // localhost
+        let url = 'http://gateway:7000/trips';
         let reqObject = await requestsToTheServer(url, 'GET', null, { cookie: `token=${token.value}` });
         console.log(reqObject);
         if ( reqObject.ok ) trips = reqObject.data;

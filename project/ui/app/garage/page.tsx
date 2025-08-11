@@ -17,7 +17,8 @@ async function processRequest(url: string, jwtToken: string) {
 }
 
 export default async function ServerCarManagement() {
-    let url = "http://localhost:7000/users/me";
+    // localhost
+    let url = "http://gateway:7000/users/me";
     const cookieStore = await cookies();
     const token = cookieStore.get('token');
     let cars: Car[] = [];
@@ -25,7 +26,8 @@ export default async function ServerCarManagement() {
         let res = await processRequest(url, token.value);
         if ( !res.ok ) return <Forbidden />;
         const userData: User = res.data;
-        url = "http://localhost:7000" + (userData.role === Role.ADMIN ? "/cars/all" : "/cars/me");
+        // localhost
+        url = "http://gateway:7000" + (userData.role === Role.ADMIN ? "/cars/all" : "/cars/me");
         res = await processRequest(url, token.value);
         if ( !res.ok ) return <Forbidden />;
         cars = res.data;

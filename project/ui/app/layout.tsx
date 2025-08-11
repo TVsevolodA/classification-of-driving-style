@@ -9,7 +9,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const cookieStore = await cookies();
   const token = cookieStore.get('token');
   if ( token !== undefined ) {
-    const url = 'http://localhost:7000/users/me';
+    // localhost
+    const url = 'http://gateway:7000/users/me';
     const reqObject = await requestsToTheServer(url, 'GET', null, { cookie: `token=${token.value}` });
     if ( reqObject.ok ) user = reqObject.data;
   }
