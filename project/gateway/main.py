@@ -18,6 +18,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# "http://localhost:5430"
 # "http://database_service:5430"
 NODE_ADDRESS =  "http://database_service:5430"
 
@@ -291,6 +292,12 @@ async def tracking(websocket: WebSocket):
     try:
         while True:
             input_data = await websocket.receive_json()
+
+            if input_data.get("type") == "identification":
+                url = NODE_ADDRESS + "/trip/create"
+                requests.post(url, json=input_data.get("trip"))
+                continue
+
             prediction_result = await predict(input_parameters=input_data["input_parametrs"])
             data_send = {
                 "result": prediction_result["prediction_result"],

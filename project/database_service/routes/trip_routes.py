@@ -15,6 +15,36 @@ from models.trip import TripBaseModel
 trip_router = APIRouter()
 get_db = CreateSession.get_db
 
+@trip_router.post(path='/create')
+def creating_car(new_trip: DriverCarBaseSchema, db: Annotated[Session, Depends(get_db)]):
+    try:
+        new_trip_object: DriverCar = DriverCar(**new_trip.model_dump())
+        existing = db.query(DriverCar).filter_by(
+            driver_id=new_trip_object.driver_id,
+            car_id=new_trip_object.car_id,
+            start_date=new_trip_object.start_date,
+            place_departure=new_trip_object.place_departure,
+            place_destination=new_trip_object.place_destination,
+        ).first()
+        if existing:
+            existing.end_date = new_trip_object.end_date
+            existing.distance = new_trip_object.distance
+            existing.duration = new_trip_object.duration
+            existing.fuel_consumption = new_trip_object.fuel_consumption
+            existing.violations_per_trip = new_trip_object.violations_per_trip
+            existing.average_speed = new_trip_object.average_speed
+        else:
+            db.add(new_trip_object)
+        db.commit()
+
+        db.add(new_trip_object)
+        db.commit()
+        return JSONResponse(
+            content={"message": "Информация о поездке добавлена в базу."},
+            status_code=status.HTTP_201_CREATED
+        )
+    except Exception as e:
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)
 
 @trip_router.get(path='/read', response_model=List[TripBaseModel])
 def get_trips_all(db: Annotated[Session, Depends(get_db)],

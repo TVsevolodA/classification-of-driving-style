@@ -7,7 +7,7 @@ from sqlalchemy.orm import validates
 from models.base import Base
 
 class DriverCarBaseSchema(BaseModel):
-    id: int
+    id: int | None = None
     driver_id: int
     car_id: int
     start_date: datetime
@@ -17,7 +17,7 @@ class DriverCarBaseSchema(BaseModel):
     distance: float
     duration: int
     fuel_consumption: float
-    violations_per_trip: int
+    violations_per_trip: int = 0
     average_speed: int
 
     class Config:
@@ -41,41 +41,41 @@ class DriverCar(Base):
 
     @validates('distance')
     def validate_year(self, _, distance):
-        MIN_DISTANCE = 1
-        assert distance < MIN_DISTANCE,\
+        MIN_DISTANCE = 0
+        assert distance > MIN_DISTANCE,\
             ["Расстояние должно быть положительным!"]
         return distance
 
     @validates('duration')
     def validate_year(self, _, duration):
-        MIN_DURATION = 1
-        assert duration < MIN_DURATION,\
-            ["Продолжительность поездки должна быть положительной!"]
+        MIN_DURATION = 0
+        assert duration > MIN_DURATION,\
+            "Продолжительность поездки должна быть положительной!"
         return duration
 
     @validates('fuel_consumption')
     def validate_year(self, _, fuel_consumption):
-        MIN_FUEL_CONSUMPTION = 1
-        assert fuel_consumption < MIN_FUEL_CONSUMPTION,\
-            ["Расход топлива должен быть положительным!"]
+        MIN_FUEL_CONSUMPTION = 0
+        assert fuel_consumption > MIN_FUEL_CONSUMPTION,\
+            "Расход топлива должен быть положительным!"
         return fuel_consumption
 
     @validates('violations_per_trip')
     def validate_year(self, _, violations_per_trip):
         MIN_NUMBER_VIOLATIONS = 0
-        assert violations_per_trip < MIN_NUMBER_VIOLATIONS,\
-            ["Количество нарушений не может быть отрицательным!"]
+        assert violations_per_trip >= MIN_NUMBER_VIOLATIONS,\
+            "Количество нарушений не может быть отрицательным!"
         return violations_per_trip
 
     @validates('average_speed')
     def validate_year(self, _, average_speed):
-        MIN_ALLOWABLE_AVERAGE_SPEED = 1
-        assert average_speed < MIN_ALLOWABLE_AVERAGE_SPEED,\
-            ["Средняя скорось должна быть положительной!"]
+        MIN_ALLOWABLE_AVERAGE_SPEED = 0
+        assert average_speed > MIN_ALLOWABLE_AVERAGE_SPEED,\
+            "Средняя скорось должна быть положительной!"
         return average_speed
 
 def checking_travel_time(mapper, connection, target):
-    if target.start_date >= target.end_date:
+    if target.start_date > target.end_date:
         raise ValueError("Время начала поездки должно быть меньше времени окончания!")
 
 event.listen(DriverCar, "before_insert", checking_travel_time)

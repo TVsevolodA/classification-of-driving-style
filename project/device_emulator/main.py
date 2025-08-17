@@ -1,10 +1,13 @@
+import random
 import datetime as dt
 import re
 import threading
 import time
-from websocket import WebSocketApp
+import websocket
 import subprocess
 import json
+
+websocket._logging._logger.level = -99
 
 def run_client(data: dict, stream_index: int):
     def get_speed(filename: str, timecode: int) -> int:
@@ -43,6 +46,56 @@ def run_client(data: dict, stream_index: int):
             return int(past_time % 60)
         return -1
 
+    def generate_route_data() -> dict:
+        current_date = dt.datetime.now() # .strftime("%Y-%m-%d")
+        routes = [
+            {
+                "place_departure": "Театральная площадь",
+                "place_destination": "Парк Победы",
+                "distance": random.uniform(3.2, 4.5),
+                "duration": random.randint(7, 20),
+            },
+            {
+                "place_departure": "Привокзальная площадь, 1",
+                "place_destination": "Астраханская ул., 83",
+                "distance": random.uniform(1, 2),
+                "duration": random.randint(4, 20),
+            },
+            {
+                "place_departure": "Набережная Космонавтов",
+                "place_destination": "Театральная площадь",
+                "distance": random.uniform(2.46, 3.5),
+                "duration": random.randint(7, 20),
+            },
+            {
+                "place_departure": "проспект имени Петра Столыпина",
+                "place_destination": "Городской парк",
+                "distance": random.uniform(3, 3.5),
+                "duration": random.randint(9, 30),
+            },
+            {
+                "place_departure": "Сенной рынок",
+                "place_destination": "ГУК Саратовский областной музей краеведения",
+                "distance": random.uniform(4.5, 6.1),
+                "duration": random.randint(12, 50),
+            },
+        ]
+        route_number = random.randint(0, len(routes)-1)
+        data = {
+            "driver_id": random.randint(2, 4),
+            "car_id": random.randint(1, 2),
+            "start_date": current_date,
+            "end_date": current_date,
+            "violations_per_trip": 0,
+            "average_speed": random.randint(10, 25),
+            "fuel_consumption": random.randint(8, 15),
+        }
+        data.update(routes[route_number])
+        data["end_date"] += dt.timedelta(minutes=data.get("duration"))
+        data["start_date"] = data["start_date"].strftime("%Y-%m-%d %H:%M:%S")
+        data["end_date"] = data["end_date"].strftime("%Y-%m-%d %H:%M:%S")
+        return data
+
     def on_message(wsapp, message):
         pass
         # print(f"Поток №{stream_index}:\nmessage")
@@ -55,6 +108,13 @@ def run_client(data: dict, stream_index: int):
 
     def on_open(wsapp):
         print(f"Поток №{stream_index}:\nСоединение открыто.")
+
+        trip_information = {
+            "type": "identification",
+            "trip": generate_route_data(),
+        }
+        wsapp.send(json.dumps(trip_information))
+
         start_time = dt.datetime.now()
 
         while True:
@@ -77,7 +137,8 @@ def run_client(data: dict, stream_index: int):
                     "stream": stream_index+1,
                 }
             }
-            wsapp.send(json.dumps(data_send))
+            if wsapp.sock and wsapp.sock.connected:
+                wsapp.send(json.dumps(data_send))
 
     cmd = [
         'ffmpeg', '-re', '-stream_loop', '-1',
@@ -95,7 +156,7 @@ def run_client(data: dict, stream_index: int):
     with open(f"{data["name_data_file"]}.txt", 'r') as data_file: # 'normal_test_drive.txt'
         MIN_TIME = int(data_file.readline().split(',')[0])
 
-    ws = WebSocketApp(url="ws://gateway:7000/tracking",
+    ws = websocket.WebSocketApp(url="ws://gateway:7000/tracking",
                                 on_open=on_open,
                                 on_message=on_message,
                                 on_error=on_error,
