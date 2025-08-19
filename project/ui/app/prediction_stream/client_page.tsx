@@ -93,7 +93,7 @@ export default function MainStreamPage({ trips }: { trips: Trip[]; }) {
                             <div className="d-flex justify-content-between align-items-center">
                                 <div>
                                     <p className="card-text text-muted small mb-1">Средний балл</p>
-                                    <h3 className="card-title mb-0">{avgScore}</h3>
+                                    <h3 className="card-title mb-0">{avgScore.toFixed(1)}</h3>
                                 </div>
                                 <div className="text-success">
                                     <i className="bi bi-graph-up fs-2"></i>
@@ -222,7 +222,7 @@ export default function MainStreamPage({ trips }: { trips: Trip[]; }) {
                                             driver.driving_rating >= 90 ? "text-success" : driver.driving_rating >= 70 ? "text-warning" : "text-danger"
                                             }`}
                                         >
-                                            {driver.driving_rating}
+                                            {driver.driving_rating.toFixed(1)}
                                         </span>
                                     </div>
                                 </div>

@@ -273,7 +273,7 @@ export default function DriversInfoPage({ data }: { data: DriversData; }) {
                                 <div className="border rounded p-2">
                                 <div className="d-flex align-items-center justify-content-center mb-1">
                                     <i className="bi bi-star-fill text-warning me-1"></i>
-                                    <strong>{driver.driving_rating}</strong>
+                                    <strong>{driver.driving_rating.toFixed(1)}</strong>
                                 </div>
                                 <small className="text-muted">Рейтинг</small>
                                 </div>

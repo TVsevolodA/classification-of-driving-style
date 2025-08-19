@@ -259,7 +259,7 @@ export default function TripHistory({ tripData }: { tripData: Trip[]; }) {
                                     {"★".repeat(Math.floor(trip.driver.driving_rating))}
                                     {"☆".repeat(5 - Math.floor(trip.driver.driving_rating))}
                                 </span>
-                                ({trip.driver.driving_rating})
+                                ({trip.driver.driving_rating.toFixed(1)})
                                 </small>
                                 <small className="text-muted">
                                 <i className="bi bi-phone me-1"></i>

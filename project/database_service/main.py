@@ -6,8 +6,8 @@ from routes.driver_routes import driver_router
 from routes.trip_routes import trip_router
 from routes.user_routes import user_router
 
-# from create_database import create_database
-# create_database()
+from create_database import create_database
+create_database()
 
 app = FastAPI()
 

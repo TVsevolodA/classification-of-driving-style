@@ -19,25 +19,23 @@ get_db = CreateSession.get_db
 def creating_car(new_trip: DriverCarBaseSchema, db: Annotated[Session, Depends(get_db)]):
     try:
         new_trip_object: DriverCar = DriverCar(**new_trip.model_dump())
-        existing = db.query(DriverCar).filter_by(
+        existing_trip = db.query(DriverCar).filter_by(
             driver_id=new_trip_object.driver_id,
             car_id=new_trip_object.car_id,
             start_date=new_trip_object.start_date,
             place_departure=new_trip_object.place_departure,
             place_destination=new_trip_object.place_destination,
         ).first()
-        if existing:
-            existing.end_date = new_trip_object.end_date
-            existing.distance = new_trip_object.distance
-            existing.duration = new_trip_object.duration
-            existing.fuel_consumption = new_trip_object.fuel_consumption
-            existing.violations_per_trip = new_trip_object.violations_per_trip
-            existing.average_speed = new_trip_object.average_speed
+        if existing_trip:
+            for column, value in new_trip.model_dump().items():
+                setattr(existing_trip, column, value)
         else:
             db.add(new_trip_object)
-        db.commit()
 
-        db.add(new_trip_object)
+        car: Car = db.query(Car).filter_by(id=new_trip_object.car_id).first()
+        if car:
+            car.mileage += int( new_trip_object.distance )
+
         db.commit()
         return JSONResponse(
             content={"message": "Информация о поездке добавлена в базу."},
@@ -124,3 +122,27 @@ def get_best_driver_and_car(
         return TripBaseModel(driver=best_driver, car=best_car)
     except Exception as e:
         return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_404_NOT_FOUND)
+
+@trip_router.put(path='/add/violation')
+def fix_violation(info_driver_car: dict, db: Annotated[Session, Depends(get_db)]):
+    try:
+        record_driver_car: DriverCar = db.query(DriverCar).filter_by(
+            driver_id=info_driver_car.get("driver_id"),
+            car_id=info_driver_car.get("car_id"),
+            start_date=info_driver_car.get("start_date"),
+        ).first()
+        if record_driver_car:
+            record_driver_car.violations_per_trip += 1
+
+        record_driver: Driver = db.query(Driver).filter_by(id=info_driver_car.get("driver_id")).first()
+        if record_driver:
+            record_driver.number_violations += 1
+            record_driver.driving_rating -= 0.01
+
+        db.commit()
+        return JSONResponse(
+            content={"message": "Нарушение зафиксировано."},
+            status_code=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return JSONResponse(content={"error": repr(e)}, status_code=status.HTTP_409_CONFLICT)

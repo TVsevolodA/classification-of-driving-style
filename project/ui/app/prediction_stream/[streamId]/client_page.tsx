@@ -185,7 +185,7 @@ export default function ClientIndividualStreamPage({ tripInfo }: { tripInfo: Tri
                 <div className="col-md-3">
                 <div className="card text-center h-100">
                     <div className="card-body">
-                    <div className="display-6 text-success mb-2">{tripInfo.driver.driving_rating}</div>
+                    <div className="display-6 text-success mb-2">{tripInfo.driver.driving_rating.toFixed(1)}</div>
                     <h6 className="card-title">Рейтинг безопасности</h6>
                     <div className="progress" style={{ height: "6px" }}>
                         <div className="progress-bar bg-success" style={{ width: `${tripInfo.driver.driving_rating * 100 / 5}%` }}></div>
@@ -463,7 +463,7 @@ export default function ClientIndividualStreamPage({ tripInfo }: { tripInfo: Tri
                                             <strong>Рейтинг безопасности:</strong>
                                         </div>
                                         <span>
-                                            {tripInfo.driver.driving_rating}/5.0
+                                            {tripInfo.driver.driving_rating.toFixed(1)}/5.0
                                             <i className="bi bi-star-fill text-warning ms-1"></i>
                                         </span>
                                     </div>

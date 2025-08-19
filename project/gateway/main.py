@@ -298,6 +298,11 @@ async def tracking(websocket: WebSocket):
                 requests.post(url, json=input_data.get("trip"))
                 continue
 
+            if input_data.get("type") == "violation":
+                url = NODE_ADDRESS + "/trip/add/violation"
+                requests.put(url, json=input_data.get("driver_car_data"))
+                continue
+
             prediction_result = await predict(input_parameters=input_data["input_parametrs"])
             data_send = {
                 "result": prediction_result["prediction_result"],
@@ -397,16 +402,17 @@ async def update_user_route(
         update_result = update_user(user_replaceable_fields=object_form)
 
         # Получаем новый токен доступа и возвращаем его
-        token = login_for_access_token(username=update_result.username, password=new_password)
-        response.set_cookie(
-            key="token",
-            value=token.access_token,
-            httponly=True,
-            secure=False,
-            samesite="lax",
-            max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-            path="/",
-        )
+        if new_password:
+            token = login_for_access_token(username=update_result.username, password=new_password)
+            response.set_cookie(
+                key="token",
+                value=token.access_token,
+                httponly=True,
+                secure=False,
+                samesite="lax",
+                max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                path="/",
+            )
 
         if update_result is None:
             raise HTTPException(

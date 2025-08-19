@@ -139,7 +139,7 @@ export default function ProfilePage({ userData, driverData, carData }: { userDat
                             <div className="row g-3 mb-4">
                                 <div className="col-6">
                                     <div className="text-center p-3 bg-primary bg-opacity-10 rounded">
-                                    <div className="h2 fw-bold text-primary mb-1">{driverData.driving_rating}</div>
+                                    <div className="h2 fw-bold text-primary mb-1">{driverData.driving_rating.toFixed(1)}</div>
                                     <div className="small text-muted">Рейтинг</div>
                                     <div className="mt-2">
                                         <i className="bi bi-star-fill text-warning"></i>

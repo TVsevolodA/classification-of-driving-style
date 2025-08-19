@@ -23,7 +23,9 @@ export default function PredictPage() {
         const data = formDataToMap(formData);
         const predictResult = await requestsToTheServer(url, 'POST', JSON.stringify(data));
         if ( predictResult.ok ) {
-            setPredict(predictResult.data);
+            let styleDriving = predictResult.data;
+            if ( veincleSpeed.currentValue <= 60 ) styleDriving["prediction_result"] = "2";
+            setPredict(styleDriving);
             setIsOpen(true);
         }
         else {

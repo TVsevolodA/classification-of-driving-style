@@ -6,10 +6,13 @@ import time
 import websocket
 import subprocess
 import json
+from sudden_accelerations import DrivingStyleAnalyzer
 
 websocket._logging._logger.level = -99
 
 def run_client(data: dict, stream_index: int):
+    analyzer = DrivingStyleAnalyzer()
+
     def get_speed(filename: str, timecode: int) -> int:
         """
         Получение скорости транспортного средства в конкретный момент времени
@@ -47,54 +50,53 @@ def run_client(data: dict, stream_index: int):
         return -1
 
     def generate_route_data() -> dict:
-        current_date = dt.datetime.now() # .strftime("%Y-%m-%d")
         routes = [
             {
                 "place_departure": "Театральная площадь",
                 "place_destination": "Парк Победы",
-                "distance": random.uniform(3.2, 4.5),
+                "distance": round( random.uniform(3.2, 4.5), 1),
                 "duration": random.randint(7, 20),
             },
             {
                 "place_departure": "Привокзальная площадь, 1",
                 "place_destination": "Астраханская ул., 83",
-                "distance": random.uniform(1, 2),
+                "distance": round( random.uniform(1, 2), 1),
                 "duration": random.randint(4, 20),
             },
             {
                 "place_departure": "Набережная Космонавтов",
                 "place_destination": "Театральная площадь",
-                "distance": random.uniform(2.46, 3.5),
+                "distance": round( random.uniform(2.46, 3.5), 1),
                 "duration": random.randint(7, 20),
             },
             {
                 "place_departure": "проспект имени Петра Столыпина",
                 "place_destination": "Городской парк",
-                "distance": random.uniform(3, 3.5),
+                "distance": round( random.uniform(3, 3.5), 1),
                 "duration": random.randint(9, 30),
             },
             {
                 "place_departure": "Сенной рынок",
                 "place_destination": "ГУК Саратовский областной музей краеведения",
-                "distance": random.uniform(4.5, 6.1),
+                "distance": round( random.uniform(4.5, 6.1), 1),
                 "duration": random.randint(12, 50),
             },
         ]
         route_number = random.randint(0, len(routes)-1)
-        data = {
+        driver_car_data = {
             "driver_id": random.randint(2, 4),
             "car_id": random.randint(1, 2),
-            "start_date": current_date,
-            "end_date": current_date,
             "violations_per_trip": 0,
             "average_speed": random.randint(10, 25),
             "fuel_consumption": random.randint(8, 15),
         }
-        data.update(routes[route_number])
-        data["end_date"] += dt.timedelta(minutes=data.get("duration"))
-        data["start_date"] = data["start_date"].strftime("%Y-%m-%d %H:%M:%S")
-        data["end_date"] = data["end_date"].strftime("%Y-%m-%d %H:%M:%S")
-        return data
+        driver_car_data.update(routes[route_number])
+        current_date = dt.datetime.now()
+        driver_car_data["start_date"] = current_date.strftime("%Y-%m-%d %H:%M:%S")
+        driver_car_data["end_date"] = (current_date + dt.timedelta(minutes=driver_car_data.get("duration"))).strftime("%Y-%m-%d %H:%M:%S")
+        return driver_car_data
+
+    ROUTE_DATA: dict = generate_route_data()
 
     def on_message(wsapp, message):
         pass
@@ -111,7 +113,7 @@ def run_client(data: dict, stream_index: int):
 
         trip_information = {
             "type": "identification",
-            "trip": generate_route_data(),
+            "trip": ROUTE_DATA,
         }
         wsapp.send(json.dumps(trip_information))
 
@@ -127,6 +129,22 @@ def run_client(data: dict, stream_index: int):
                 current_speed = get_speed( filename=f"{data["name_data_file"]}.txt",  timecode=int(diff_time % 60) )
             else:
                 current_speed = get_speed( filename=f"{data["name_data_file"]}.txt",  timecode=time_stream )
+
+            # Анализируем вероятное ускорение транспорта
+            time_last_event = analyzer.datetime_event
+            analyzer.add_speed( int( dt.datetime.today().timestamp() ), current_speed)
+            time_current_event = analyzer.datetime_event
+            if time_last_event != time_current_event:
+                information_violation = {
+                    "type": "violation",
+                    "acceleration": analyzer.type_event,
+                    "driver_car_data": {
+                        "driver_id": ROUTE_DATA.get("driver_id"),
+                        "car_id": ROUTE_DATA.get("car_id"),
+                        "start_date": ROUTE_DATA.get("start_date"),
+                    },
+                }
+                wsapp.send(json.dumps(information_violation))
 
             messege = data["input_parametrs"]
             messege["veincle speed"] = current_speed
