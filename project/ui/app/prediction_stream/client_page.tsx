@@ -13,7 +13,6 @@ function getDescriptionDivingStyle(rating: number) {
 }
 
 export default function MainStreamPage({ trips }: { trips: Trip[]; }) {
-    console.log(trips);
     // Типы стилей вождения
     const drivingStyles = {
         normal: { label: "Безопасный", color: "success", textColor: "text-success", bgColor: "bg-success-subtle" },
@@ -93,7 +92,7 @@ export default function MainStreamPage({ trips }: { trips: Trip[]; }) {
                             <div className="d-flex justify-content-between align-items-center">
                                 <div>
                                     <p className="card-text text-muted small mb-1">Средний балл</p>
-                                    <h3 className="card-title mb-0">{avgScore.toFixed(1)}</h3>
+                                    <h3 className="card-title mb-0">{isNaN(avgScore) ? 0.0 : avgScore.toFixed(1)}</h3>
                                 </div>
                                 <div className="text-success">
                                     <i className="bi bi-graph-up fs-2"></i>

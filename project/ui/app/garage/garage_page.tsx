@@ -116,7 +116,7 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
 
     const openEditModal = (car: Car) => {
         setFormData({
-            id: unknownId,
+            id: car.id,
             vin: car.vin,
             owner_id: user.id,
             brand: car.brand,
@@ -476,7 +476,7 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
                             type="date"
                             className="form-control"
                             id="insurance_expiry_date"
-                            value={formData.insurance_expiry_date}
+                            value={formData.insurance_expiry_date.split('T')[0]}
                             onChange={(e) => setFormData({ ...formData, insurance_expiry_date: e.target.value })}
                             min={(() => {
                                 const today = new Date();
@@ -498,7 +498,7 @@ export default function CarManagement({ userСars }: { userСars: Car[]; }) {
                             type="date"
                             className="form-control"
                             id="date_technical_inspection"
-                            value={formData.date_technical_inspection}
+                            value={formData.date_technical_inspection.split('T')[0]}
                             onChange={(e) => setFormData({ ...formData, date_technical_inspection: e.target.value })}
                             min={(() => {
                                 const today = new Date();

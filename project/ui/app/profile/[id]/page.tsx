@@ -31,7 +31,6 @@ export default async function ProfilePageWrapper() {
         // localhost
         url = "http://gateway:7000/trips/best";
         const driverCarsInfo = await contactServer(url, "GET", token.value);
-        console.log(driverCarsInfo)
         if ( driverCarsInfo.ok ) {
             driver = driverCarsInfo.data["driver"];
             car = driverCarsInfo.data["car"];

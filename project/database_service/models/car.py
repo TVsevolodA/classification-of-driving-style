@@ -53,3 +53,9 @@ class Car(Base):
             [f"""Пробег автомобиля должен находится в диапазоне значений
             от {MINIMUM_MILEAGE} до {MAXIMUM_MILEAGE}!"""]
         return mileage
+
+    @validates('insurance_expiry_date', 'date_technical_inspection')
+    def validate_expiration_driver_license(self, _, date):
+        if type(date) is str:
+            return datetime.strptime(date, "%Y-%m-%d").date()
+        return date

@@ -10,7 +10,6 @@ export default async function LoadingMainStreamPage() {
         // localhost
         let url = 'http://gateway:7000/trips';
         let reqObject = await requestsToTheServer(url, 'GET', null, { cookie: `token=${token.value}` });
-        console.log(reqObject);
         if ( reqObject.ok ) trips = reqObject.data;
     }
     return <MainStreamPage trips = { trips } />

@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { Driver } from "../../models/driver";
 
 function getInitialData( typeForm: string, driverData: Driver) {
-    console.log(typeForm);
-    console.log(driverData);
     return typeForm === "add" ?
         {
             license_number: "",
@@ -89,7 +87,6 @@ export default function DriverDataEntryForm({ isOpen, onClose, userData, typeFor
         if ( typeForm === "edit" ) data["id"] = driverData.id;
 
         const updateDriverResult = await requestsToTheServer(url, typeMethod, JSON.stringify(data));
-        console.log(updateDriverResult);
         const alertBlock = document.createElement("div");
         alertBlock.id = "messageAlert"
         let message = "";
@@ -266,7 +263,7 @@ export default function DriverDataEntryForm({ isOpen, onClose, userData, typeFor
                                                 className="form-control"
                                                 id="issue_date"
                                                 name="issue_date"
-                                                value={formData.issue_date}
+                                                value={formData.issue_date.split('T')[0]}
                                                 onChange={onChange}
                                                 required
                                                 disabled={isSubmitting}
@@ -282,7 +279,7 @@ export default function DriverDataEntryForm({ isOpen, onClose, userData, typeFor
                                                 className="form-control"
                                                 id="expiration_driver_license"
                                                 name="expiration_driver_license"
-                                                value={formData.expiration_driver_license}
+                                                value={formData.expiration_driver_license.split('T')[0]}
                                                 onChange={onChange}
                                                 required
                                                 disabled={isSubmitting}
