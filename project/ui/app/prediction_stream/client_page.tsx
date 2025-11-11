@@ -188,7 +188,7 @@ export default function MainStreamPage({ trips }: { trips: Trip[]; }) {
                     getDescriptionDivingStyle(driver.driving_rating) as keyof typeof drivingStyles
                 ];
 
-                const uiid = `${car.id}${driver.id}`;
+                const uiid = `${car.id}-${driver.id}-${driverCar.id}`;
                 return (
                 <div key={uiid} className="col-lg-6">
                     <div className="card h-100 shadow-sm">
