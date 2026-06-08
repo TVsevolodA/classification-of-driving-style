@@ -35,6 +35,33 @@ export default async function ProfilePageWrapper() {
             driver = driverCarsInfo.data["driver"];
             car = driverCarsInfo.data["car"];
         }
+        else {
+            driver = {
+                id: -1,
+                director_id: -1,
+                license_number: "",
+                expiration_driver_license: "",
+                full_name: "",
+                phone: "",
+                email: "",
+                driving_experience: 0,
+                issue_date: "",
+                driving_rating: 0,
+                number_violations: 0
+            };
+            car = {
+                id: -1,
+                vin: "",
+                owner_id: -1,
+                brand: "",
+                model: "",
+                year: 2000,
+                license_plate: "",
+                insurance_expiry_date: "",
+                date_technical_inspection: "",
+                mileage: 0
+            };
+        }
     }
     else {
         redirect('/auth');
